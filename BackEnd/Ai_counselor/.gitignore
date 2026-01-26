@@ -1,0 +1,38 @@
+# Python-related
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.egg-info/
+env/
+venv/
+ENV/
+.venv/
+
+# Django-related
+*.log
+db.sqlite3
+media/
+staticfiles/
+*.pot
+*.pyc
+
+# IDE Files
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# Test coverage
+.coverage
+.coverage.*
+nosetests.xml
+test-results/
+coverage.xml
+
+# Security sensitive files
+*.env
