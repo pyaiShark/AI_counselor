@@ -60,6 +60,14 @@ class PasswordResetRequestSerializer(serializers.Serializer):
         return value
 
 class ProfileSerializer(serializers.ModelSerializer):
+    academic_background = AcademicBackgroundSerializer(read_only=True)
+    study_goal = StudyGoalSerializer(read_only=True)
+    budget = BudgetSerializer(read_only=True)
+    exams_readiness = ExamsAndReadinessSerializer(read_only=True)
+
     class Meta:
         model = User
-        fields = ["email", "first_name", "last_name", "date_joined", "onboarding_step"]
+        fields = [
+            "email", "first_name", "last_name", "date_joined", "onboarding_step",
+            "academic_background", "study_goal", "budget", "exams_readiness"
+        ]

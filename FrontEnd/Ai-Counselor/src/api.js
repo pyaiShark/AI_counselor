@@ -99,8 +99,19 @@ export const updateProfile = async (data) => { // This part may be changed, revi
 };
 
 
+// Onboarding API calls
+export const getOnboardingStatus = async () => {
+    const response = await api.get('/onboarding/status/');
+    return response.data;
+};
+
 export const submitAcademicBackground = async (data) => {
     const response = await api.post('/onboarding/academic/', data);
+    return response.data;
+};
+
+export const getAcademicBackground = async () => {
+    const response = await api.get('/onboarding/academic/');
     return response.data;
 };
 
@@ -109,13 +120,28 @@ export const submitStudyGoal = async (data) => {
     return response.data;
 };
 
+export const getStudyGoal = async () => {
+    const response = await api.get('/onboarding/study-goal/');
+    return response.data;
+};
+
 export const submitBudget = async (data) => {
     const response = await api.post('/onboarding/budget/', data);
     return response.data;
 };
 
+export const getBudget = async () => {
+    const response = await api.get('/onboarding/budget/');
+    return response.data;
+};
+
 export const submitExamsReadiness = async (data) => {
     const response = await api.post('/onboarding/exams/', data);
+    return response.data;
+};
+
+export const getExamsReadiness = async () => {
+    const response = await api.get('/onboarding/exams/');
     return response.data;
 };
 

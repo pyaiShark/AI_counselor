@@ -8,7 +8,7 @@ import Label from '@tailus-ui/Label';
 import Separator from '@tailus-ui/Separator';
 import { Google } from './icons';
 
-import { login as apiLogin } from '../../api'; // Renamed to avoid name collision
+import { login as apiLogin, getProfile } from '../../api';
 import Loader from '../Loader';
 import FormError from '../FormError';
 import AuthContext from '../../context/AuthContext';
@@ -33,9 +33,9 @@ export default function Login() {
             // Context handles state update and user setting if needed
             login(data.first_name);
 
-            // Check onboarding status
-            const onboardingStatus = localStorage.getItem('onboarding_status');
-            if (onboardingStatus === 'completed') {
+            // Fetch profile to check onboarding status
+            const profile = await getProfile();
+            if (profile.onboarding_step === 'Completed') {
                 navigate('/dashboard');
             } else {
                 navigate('/onboarding');

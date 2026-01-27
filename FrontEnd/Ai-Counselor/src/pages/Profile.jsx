@@ -2,7 +2,13 @@ import React, { useState, useEffect } from 'react';
 import Card from '@tailus-ui/Card';
 import Button from '@tailus-ui/Button';
 import { Title, Text, Caption } from '@tailus-ui/typography';
-import { getProfile, updateProfile } from '../api';
+import {
+    getProfile,
+    submitAcademicBackground,
+    submitStudyGoal,
+    submitBudget,
+    submitExamsReadiness
+} from '../api';
 import Loader from '../components/Loader';
 import AcademicBackground from '../components/Onboarding/Steps/AcademicBackground';
 import StudyGoal from '../components/Onboarding/Steps/StudyGoal';
@@ -26,22 +32,44 @@ const Profile = () => {
         setLoading(true);
         try {
             const data = await getProfile();
-            setProfileData(data);
-            // Initialize local formData with fetched data for editing
-            setFormData(data.onboarding_data || {});
+
+            // Map API response (nested snake_case) to frontend (flat camelCase)
+            const mappedOnboardingData = {
+                // Academic
+                educationLevel: data.academic_background?.education_level || '',
+                degreeMajor: data.academic_background?.degree_major || '',
+                graduationYear: data.academic_background?.graduation_year || '',
+                gpa: data.academic_background?.gpa || '',
+
+                // Study Goal
+                intendedDegree: data.study_goal?.intended_degree || '',
+                fieldOfStudy: data.study_goal?.field_of_study || '',
+                targetIntake: data.study_goal?.target_intake || '',
+                preferredCountries: data.study_goal?.preferred_countries || '',
+
+                // Budget
+                budgetRange: data.budget?.budget_range || '',
+                fundingPlan: data.budget?.funding_plan || '',
+
+                // Exams
+                ieltsToeflStatus: data.exams_readiness?.ielts_toefl_status || '',
+                greGmatStatus: data.exams_readiness?.gre_gmat_status || '',
+                sopStatus: data.exams_readiness?.sop_status || '',
+                // Scores are not in DB models yet, so they will be empty/lost on refresh
+                ieltsToeflScore: '',
+                greGmatScore: ''
+            };
+
+            const fullProfile = {
+                ...data, // email, first_name etc
+                onboarding_data: mappedOnboardingData
+            };
+
+            setProfileData(fullProfile);
+            setFormData(mappedOnboardingData);
         } catch (err) {
+            console.error(err);
             setError('Failed to load profile.');
-            // Fallback for demo if API fails/doesn't exist yet
-            const savedData = localStorage.getItem('onboarding_data');
-            if (savedData) {
-                setProfileData({
-                    first_name: 'Demo User',
-                    email: 'demo@example.com',
-                    created_at: new Date().toISOString(),
-                    onboarding_data: JSON.parse(savedData)
-                });
-                setFormData(JSON.parse(savedData));
-            }
         } finally {
             setLoading(false);
         }
@@ -61,22 +89,41 @@ const Profile = () => {
     const handleSave = async () => {
         try {
             setLoading(true);
-            // Merge new form data into profile data structure
-            const updatedProfile = {
-                ...profileData,
-                onboarding_data: formData
-            };
 
-            await updateProfile(updatedProfile);
-            setProfileData(updatedProfile);
+            if (editingSection === 'academic') {
+                await submitAcademicBackground({
+                    education_level: formData.educationLevel,
+                    degree_major: formData.degreeMajor,
+                    graduation_year: formData.graduationYear,
+                    gpa: formData.gpa
+                });
+            } else if (editingSection === 'goals') {
+                await submitStudyGoal({
+                    intended_degree: formData.intendedDegree,
+                    field_of_study: formData.fieldOfStudy,
+                    target_intake: formData.targetIntake,
+                    preferred_countries: formData.preferredCountries
+                });
+            } else if (editingSection === 'budget') {
+                await submitBudget({
+                    budget_range: formData.budgetRange,
+                    funding_plan: formData.fundingPlan
+                });
+            } else if (editingSection === 'exams') {
+                await submitExamsReadiness({
+                    ielts_toefl_status: formData.ieltsToeflStatus,
+                    gre_gmat_status: formData.greGmatStatus,
+                    sop_status: formData.sopStatus
+                });
+            }
+
+            // Refresh profile to get updated data and re-map
+            await fetchProfile();
             setEditingSection(null);
-
-            // Also update localStorage to keep sync
-            localStorage.setItem('onboarding_data', JSON.stringify(formData));
         } catch (err) {
+            console.error(err);
             setError('Failed to update profile.');
-        } finally {
-            setLoading(false);
+            setLoading(false); // Only set loading false on error, success handled by fetchProfile
         }
     };
 
@@ -105,17 +152,19 @@ const Profile = () => {
                         <Component
                             formData={formData}
                             updateFormData={updateFormData}
-                            // Prop mocks for reusable components
+                            // Reuse components but override navigation checks
                             onNext={handleSave}
+                            // Disable skip/back for edit mode, or make them cancel
                             onSkip={handleCancel}
                             onBack={handleCancel}
+                            loading={loading}
                         />
                         <div className="flex gap-2 justify-end mt-4 border-t pt-4">
-                            <Button.Root variant="ghost" onClick={handleCancel} size="sm">
+                            <Button.Root variant="ghost" onClick={handleCancel} size="sm" disabled={loading}>
                                 <Button.Label>Cancel</Button.Label>
                             </Button.Root>
-                            <Button.Root onClick={handleSave} size="sm">
-                                <Button.Label>Save Changes</Button.Label>
+                            <Button.Root onClick={handleSave} size="sm" disabled={loading}>
+                                <Button.Label>{loading ? 'Saving...' : 'Save Changes'}</Button.Label>
                             </Button.Root>
                         </div>
                     </div>
@@ -139,7 +188,7 @@ const Profile = () => {
                     <Title className="text-white text-3xl">{profileData?.first_name || 'User'} {profileData?.last_name || ''}</Title>
                     <Text className="text-blue-200">{profileData?.email || 'email@example.com'}</Text>
                     <Caption className="text-blue-300 mt-1">
-                        Member since {new Date(profileData?.date_joined).toLocaleDateString()}
+                        Member since {profileData?.date_joined ? new Date(profileData.date_joined).toLocaleDateString() : '-'}
                     </Caption>
                 </div>
             </div>
@@ -232,13 +281,11 @@ const Profile = () => {
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
                                     <span className="font-semibold block">IELTS/TOEFL:</span>
-                                    {profileData?.onboarding_data?.ieltsToeflStatus}
-                                    {profileData?.onboarding_data?.ieltsToeflScore && ` (${profileData.onboarding_data.ieltsToeflScore})`}
+                                    {profileData?.onboarding_data?.ieltsToeflStatus || '-'}
                                 </div>
                                 <div>
                                     <span className="font-semibold block">GRE/GMAT:</span>
-                                    {profileData?.onboarding_data?.greGmatStatus}
-                                    {profileData?.onboarding_data?.greGmatScore && ` (${profileData.onboarding_data.greGmatScore})`}
+                                    {profileData?.onboarding_data?.greGmatStatus || '-'}
                                 </div>
                                 <div>
                                     <span className="font-semibold block">SOP Status:</span>

@@ -51,8 +51,8 @@ const Timeline = ({ currentStep, status }) => {
                     if (isCompleted) {
                         circleClasses += "bg-green-500 border-green-500 text-white scale-110";
                     } else if (isCurrent) {
-                        // Changed to Blue for Current Step per user request
-                        circleClasses += "bg-white dark:bg-gray-900 border-blue-500 animate-pulse shadow-[0_0_15px_rgba(59,130,246,0.6)] scale-110";
+                        // Changed to Blue for Current Step per user request - Removed animate-pulse
+                        circleClasses += "bg-white dark:bg-gray-900 border-blue-500 shadow-[0_0_15px_rgba(59,130,246,0.6)] scale-110";
                     } else if (isFuture) {
                         circleClasses += "bg-white dark:bg-gray-900 border-gray-300 dark:border-gray-600 text-gray-300";
                     }

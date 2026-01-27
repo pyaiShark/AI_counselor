@@ -4,6 +4,7 @@ import Card from '../components/tailus-ui/Card';
 import Button from '../components/tailus-ui/Button';
 import { Title, Text } from '../components/tailus-ui/typography';
 import Timeline from '../components/Dashboard/Timeline';
+import { getProfile } from '../api';
 
 const quotes = [
     "The future belongs to those who believe in the beauty of their dreams. - Eleanor Roosevelt",
@@ -19,12 +20,27 @@ const Dashboard = () => {
     const [randomQuote, setRandomQuote] = useState('');
 
     useEffect(() => {
-        // In a real app, these would come from an API
-        const onboardingStatus = localStorage.getItem('onboarding_status');
-        const onboardingStep = localStorage.getItem('onboarding_step');
+        const fetchStatus = async () => {
+            try {
+                const profile = await getProfile();
+                const stepMap = {
+                    'AcademicBackground': 1,
+                    'StudyGoal': 2,
+                    'Budget': 3,
+                    'ExamsAndReadiness': 4,
+                    'Completed': 5
+                };
 
-        setStatus(onboardingStatus || 'incomplete');
-        setCurrentStep(parseInt(onboardingStep) || 1);
+                const step = profile.onboarding_step === 'Completed' ? 5 : (stepMap[profile.onboarding_step] || 1);
+
+                setStatus(profile.onboarding_step === 'Completed' ? 'completed' : 'incomplete');
+                setCurrentStep(step);
+            } catch (err) {
+                console.error("Dashboard fetch error", err);
+            }
+        };
+
+        fetchStatus();
         setRandomQuote(quotes[Math.floor(Math.random() * quotes.length)]);
 
         // Rotate quotes every 10 seconds

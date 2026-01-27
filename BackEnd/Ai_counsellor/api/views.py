@@ -38,7 +38,7 @@ from .serializers import (
 @permission_classes([IsAuthenticated])
 def profile_view(request):
     serializer = ProfileSerializer(request.user)
-    print("Profile-Data------", serializer.data)
+    #print("Profile-Data------", serializer.data)
     return Response(serializer.data, status=status.HTTP_200_OK)
 
 
@@ -195,11 +195,37 @@ def password_reset(request):
             user.save()
             return JsonResponse({"detail": "Password has been reset successfully."}, status=200)
         return JsonResponse({"error": "Password is required"}, status=400)
+    except Exception as e:
+        return JsonResponse({"error": str(e)}, status=400)
 
 
-@api_view(['POST'])
+@api_view(['POST', 'GET'])
 @permission_classes([IsAuthenticated])
 def academic_background_view(request):
+    if request.method == 'GET':
+        try:
+            if hasattr(request.user, 'academic_background'):
+                academic_bg = request.user.academic_background
+                serializer = AcademicBackgroundSerializer(academic_bg)
+                return Response(
+                    {
+                        'status': 'success',
+                        'data': serializer.data
+                    },
+                    status=status.HTTP_200_OK
+                )
+            else:
+                return Response(
+                    {
+                        'status': 'success',
+                        'data': {} # Return empty data if not found
+                    },
+                    status=status.HTTP_200_OK
+                )
+
+        except Exception as e:
+            return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
     try:
         serializer = AcademicBackgroundSerializer(data=request.data)
         if serializer.is_valid():
@@ -209,18 +235,36 @@ def academic_background_view(request):
                 defaults=serializer.validated_data
             )
             
-            # Update onboarding step
-            request.user.onboarding_step = 'StudyGoal'
-            request.user.save()
+            # Update onboarding step only if not already completed
+            if request.user.onboarding_step != 'Completed':
+                request.user.onboarding_step = 'StudyGoal'
+                request.user.save()
             
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     except Exception as e:
         return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-@api_view(['POST'])
+
+@api_view(['POST', 'GET'])
 @permission_classes([IsAuthenticated])
 def study_goal_view(request):
+    if request.method == 'GET':
+        try:
+            if hasattr(request.user, 'study_goal'):
+                study_goal = request.user.study_goal
+                serializer = StudyGoalSerializer(study_goal)
+                return Response(
+                    {
+                        'status': 'success',
+                        'data': serializer.data
+                    },
+                    status=status.HTTP_200_OK
+                )
+            else:
+                return Response({'status': 'success', 'data': {}}, status=status.HTTP_200_OK)
+        except Exception as e:
+            return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     try:
         serializer = StudyGoalSerializer(data=request.data)
         if serializer.is_valid():
@@ -229,17 +273,34 @@ def study_goal_view(request):
                 defaults=serializer.validated_data
             )
             
-            request.user.onboarding_step = 'Budget'
-            request.user.save()
+            if request.user.onboarding_step != 'Completed':
+                request.user.onboarding_step = 'Budget'
+                request.user.save()
             
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     except Exception as e:
         return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-@api_view(['POST'])
+@api_view(['POST', 'GET'])
 @permission_classes([IsAuthenticated])
 def budget_view(request):
+    if request.method == 'GET':
+        try:
+            if hasattr(request.user, 'budget'):
+                budget = request.user.budget
+                serializer = BudgetSerializer(budget)
+                return Response(
+                    {
+                        'status': 'success',
+                        'data': serializer.data
+                    },
+                    status=status.HTTP_200_OK
+                )
+            else:
+                return Response({'status': 'success', 'data': {}}, status=status.HTTP_200_OK)
+        except Exception as e:
+            return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     try:
         serializer = BudgetSerializer(data=request.data)
         if serializer.is_valid():
@@ -248,17 +309,34 @@ def budget_view(request):
                 defaults=serializer.validated_data
             )
             
-            request.user.onboarding_step = 'ExamsAndReadiness'
-            request.user.save()
+            if request.user.onboarding_step != 'Completed':
+                request.user.onboarding_step = 'ExamsAndReadiness'
+                request.user.save()
             
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     except Exception as e:
         return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-@api_view(['POST'])
+@api_view(['POST', 'GET'])
 @permission_classes([IsAuthenticated])
 def exams_readiness_view(request):
+    if request.method == 'GET':
+        try:
+            if hasattr(request.user, 'exams_readiness'):
+                exams = request.user.exams_readiness
+                serializer = ExamsAndReadinessSerializer(exams)
+                return Response(
+                    {
+                        'status': 'success',
+                        'data': serializer.data
+                    },
+                    status=status.HTTP_200_OK
+                )
+            else:
+                return Response({'status': 'success', 'data': {}}, status=status.HTTP_200_OK)
+        except Exception as e:
+            return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     try:
         serializer = ExamsAndReadinessSerializer(data=request.data)
         if serializer.is_valid():
@@ -276,3 +354,18 @@ def exams_readiness_view(request):
         return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_onboading_status(request):
+    try:
+        return Response(
+            {
+                'status': 'success',
+                'data': {
+                    'onboarding_step': request.user.onboarding_step
+                }
+            },
+            status=status.HTTP_200_OK
+        )
+    except Exception as e:
+        return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

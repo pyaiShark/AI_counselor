@@ -22,4 +22,5 @@ urlpatterns = [
     path('onboarding/study-goal/', views.study_goal_view, name='study_goal'),
     path('onboarding/budget/', views.budget_view, name='budget'),
     path('onboarding/exams/', views.exams_readiness_view, name='exams_readiness'),
+    path('onboarding/status/', views.get_onboading_status, name='get_onboading_status'),
 ]
