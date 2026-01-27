@@ -158,6 +158,7 @@ const Profile = () => {
                             onSkip={handleCancel}
                             onBack={handleCancel}
                             loading={loading}
+                            isEditing={true}
                         />
                         <div className="flex gap-2 justify-end mt-4 border-t pt-4">
                             <Button.Root variant="ghost" onClick={handleCancel} size="sm" disabled={loading}>

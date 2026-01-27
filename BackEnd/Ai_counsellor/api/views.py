@@ -235,8 +235,10 @@ def academic_background_view(request):
                 defaults=serializer.validated_data
             )
             
-            # Update onboarding step only if not already completed
-            if request.user.onboarding_step != 'Completed':
+            # Update onboarding step only if not already completed and if we are advancing
+            # Logic: If user is at 'AcademicBackground', move to 'StudyGoal'.
+            # If user is already at 'StudyGoal', 'Budget', 'ExamsAndReadiness', or 'Completed', do NOT change it back.
+            if request.user.onboarding_step == 'AcademicBackground':
                 request.user.onboarding_step = 'StudyGoal'
                 request.user.save()
             
@@ -273,7 +275,9 @@ def study_goal_view(request):
                 defaults=serializer.validated_data
             )
             
-            if request.user.onboarding_step != 'Completed':
+            # Update onboarding step only if at the current step (StudyGoal)
+            # If user is at 'Budget', 'ExamsAndReadiness', or 'Completed', preserve that progress.
+            if request.user.onboarding_step == 'StudyGoal':
                 request.user.onboarding_step = 'Budget'
                 request.user.save()
             
@@ -309,7 +313,8 @@ def budget_view(request):
                 defaults=serializer.validated_data
             )
             
-            if request.user.onboarding_step != 'Completed':
+            # Update onboarding step only if at the current step (Budget)
+            if request.user.onboarding_step == 'Budget':
                 request.user.onboarding_step = 'ExamsAndReadiness'
                 request.user.save()
             

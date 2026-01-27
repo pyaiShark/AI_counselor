@@ -5,7 +5,7 @@ import Input from '@tailus-ui/Input';
 import Label from '@tailus-ui/Label';
 import { Title, Text } from '@tailus-ui/typography';
 
-const Budget = ({ formData, updateFormData, onNext, onBack, onSkip, loading }) => {
+const Budget = ({ formData, updateFormData, onNext, onBack, onSkip, loading, isEditing = false }) => {
     const handleChange = (e) => {
         updateFormData({ [e.target.name]: e.target.value });
     };
@@ -71,19 +71,21 @@ const Budget = ({ formData, updateFormData, onNext, onBack, onSkip, loading }) =
                 </div>
             </Card>
 
-            <div className="flex justify-between items-center pt-4">
-                <div className="flex gap-2">
-                    <Button.Root variant="outline" onClick={onBack} disabled={loading}>
-                        <Button.Label>Back</Button.Label>
-                    </Button.Root>
-                    <Button.Root variant="ghost" onClick={onSkip} disabled={loading}>
-                        <Button.Label>Skip</Button.Label>
+            {!isEditing && (
+                <div className="flex justify-between items-center pt-4">
+                    <div className="flex gap-2">
+                        <Button.Root variant="outline" onClick={onBack} disabled={loading}>
+                            <Button.Label>Back</Button.Label>
+                        </Button.Root>
+                        <Button.Root variant="ghost" onClick={onSkip} disabled={loading}>
+                            <Button.Label>Skip</Button.Label>
+                        </Button.Root>
+                    </div>
+                    <Button.Root onClick={onNext} disabled={!isValid || loading} className={!isValid || loading ? "opacity-50 cursor-not-allowed" : ""}>
+                        <Button.Label>{loading ? 'Saving...' : 'Next Step'}</Button.Label>
                     </Button.Root>
                 </div>
-                <Button.Root onClick={onNext} disabled={!isValid || loading} className={!isValid || loading ? "opacity-50 cursor-not-allowed" : ""}>
-                    <Button.Label>{loading ? 'Saving...' : 'Next Step'}</Button.Label>
-                </Button.Root>
-            </div>
+            )}
         </div>
     );
 };

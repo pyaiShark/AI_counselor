@@ -5,7 +5,7 @@ import Input from '@tailus-ui/Input';
 import Label from '@tailus-ui/Label';
 import { Title, Text } from '@tailus-ui/typography';
 
-const AcademicBackground = ({ formData, updateFormData, onNext, onSkip, loading }) => {
+const AcademicBackground = ({ formData, updateFormData, onNext, onSkip, loading, isEditing = false }) => {
     const handleChange = (e) => {
         updateFormData({ [e.target.name]: e.target.value });
     };
@@ -137,14 +137,16 @@ const AcademicBackground = ({ formData, updateFormData, onNext, onSkip, loading 
                 </div>
             </Card>
 
-            <div className="flex justify-between items-center pt-4">
-                <Button.Root variant="ghost" onClick={onSkip} disabled={loading}>
-                    <Button.Label>Skip</Button.Label>
-                </Button.Root>
-                <Button.Root onClick={onNext} disabled={!isValid || loading} className={!isValid || loading ? "opacity-50 cursor-not-allowed" : ""}>
-                    <Button.Label>{loading ? 'Saving...' : 'Next Step'}</Button.Label>
-                </Button.Root>
-            </div>
+            {!isEditing && (
+                <div className="flex justify-between items-center pt-4">
+                    <Button.Root variant="ghost" onClick={onSkip} disabled={loading}>
+                        <Button.Label>Skip</Button.Label>
+                    </Button.Root>
+                    <Button.Root onClick={onNext} disabled={!isValid || loading} className={!isValid || loading ? "opacity-50 cursor-not-allowed" : ""}>
+                        <Button.Label>{loading ? 'Saving...' : 'Next Step'}</Button.Label>
+                    </Button.Root>
+                </div>
+            )}
         </div>
     );
 };

@@ -18,6 +18,19 @@ const Dashboard = () => {
     const [status, setStatus] = useState('incomplete');
     const [currentStep, setCurrentStep] = useState(1);
     const [randomQuote, setRandomQuote] = useState('');
+    const [lockShake, setLockShake] = useState(false);
+    const [highlightButton, setHighlightButton] = useState(false);
+
+    const handleLockedClick = () => {
+        setLockShake(true);
+        setHighlightButton(true);
+
+        // Vibrate lock for 500ms
+        setTimeout(() => setLockShake(false), 500);
+
+        // Highlight button for 1s
+        setTimeout(() => setHighlightButton(false), 1000);
+    };
 
     useEffect(() => {
         const fetchStatus = async () => {
@@ -100,7 +113,7 @@ const Dashboard = () => {
                                         <Text className="text-gray-500 dark:text-gray-400 mt-1">Complete these steps to unlock full access.</Text>
                                     </div>
                                     <Link to="/onboarding">
-                                        <Button.Root className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white shadow-lg shadow-blue-500/30 transition-all transform hover:-translate-y-0.5">
+                                        <Button.Root className={`bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white shadow-lg shadow-blue-500/30 transition-all transform hover:-translate-y-0.5 ${highlightButton ? 'ring-4 ring-yellow-400 scale-105 duration-300' : ''}`}>
                                             <Button.Label>Continue Application &rarr;</Button.Label>
                                         </Button.Root>
                                     </Link>
@@ -114,25 +127,53 @@ const Dashboard = () => {
 
                 {/* Widgets Grid */}
                 <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-                    {/* Active Widget */}
-                    <Link to="/ai-counselor" className="group block h-full">
-                        <Card className="h-full p-8 space-y-5 border border-transparent hover:border-blue-500/30 bg-white dark:bg-gray-900 shadow-lg hover:shadow-2xl hover:shadow-blue-500/10 transition-all duration-300 relative overflow-hidden">
-                            <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500/5 rounded-bl-full transition-transform group-hover:scale-110" />
+                    {/* Active Widget - AI Counselor (Locked if incomplete) */}
+                    {isCompleted ? (
+                        <Link to="/ai-counselor" className="group block h-full">
+                            <Card className="h-full p-8 space-y-5 border border-transparent hover:border-blue-500/30 bg-white dark:bg-gray-900 shadow-lg hover:shadow-2xl hover:shadow-blue-500/10 transition-all duration-300 relative overflow-hidden">
+                                <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500/5 rounded-bl-full transition-transform group-hover:scale-110" />
 
-                            <div className="w-12 h-12 rounded-xl bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
-                                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" /></svg>
-                            </div>
+                                <div className="w-12 h-12 rounded-xl bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+                                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" /></svg>
+                                </div>
 
-                            <div>
-                                <Title size="lg" className="font-bold group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">AI Counselor</Title>
-                                <Text className="mt-2 text-gray-600 dark:text-gray-400">Your personal guide available 24/7. Get instant answers and tailored advice.</Text>
-                            </div>
+                                <div>
+                                    <Title size="lg" className="font-bold group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">AI Counselor</Title>
+                                    <Text className="mt-2 text-gray-600 dark:text-gray-400">Your personal guide available 24/7. Get instant answers and tailored advice.</Text>
+                                </div>
 
-                            <div className="pt-4 flex items-center text-blue-600 font-medium opacity-0 group-hover:opacity-100 transform translate-x-[-10px] group-hover:translate-x-0 transition-all">
-                                Start Chatting <svg className="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
-                            </div>
-                        </Card>
-                    </Link>
+                                <div className="pt-4 flex items-center text-blue-600 font-medium opacity-0 group-hover:opacity-100 transform translate-x-[-10px] group-hover:translate-x-0 transition-all">
+                                    Start Chatting <svg className="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
+                                </div>
+                            </Card>
+                        </Link>
+                    ) : (
+                        <div onClick={handleLockedClick} className="group block h-full cursor-pointer">
+                            <Card className="h-full p-8 space-y-5 border border-transparent bg-white dark:bg-gray-900 shadow-lg transition-all duration-300 relative overflow-hidden opacity-90">
+                                {/* Lock Icon */}
+                                <div className={`absolute top-4 right-4 text-gray-400 z-20 ${lockShake ? 'animate-bounce text-red-500' : ''}`}>
+                                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                                    </svg>
+                                </div>
+
+                                <div className="absolute top-0 right-0 w-32 h-32 bg-gray-100 dark:bg-gray-800 rounded-bl-full" />
+
+                                <div className="w-12 h-12 rounded-xl bg-gray-100 dark:bg-gray-800 text-gray-400 flex items-center justify-center grayscale">
+                                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" /></svg>
+                                </div>
+
+                                <div>
+                                    <Title size="lg" className="font-bold text-gray-400">AI Counselor</Title>
+                                    <Text className="mt-2 text-gray-400">Complete your application roadmap to unlock your personal AI guide.</Text>
+                                </div>
+
+                                <div className="pt-4 flex items-center text-gray-400 font-medium">
+                                    <span className="flex items-center text-sm"><svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg> Locked</span>
+                                </div>
+                            </Card>
+                        </div>
+                    )}
 
                     {/* Coming Soon Widget 1 */}
                     <Card className="p-8 space-y-5 bg-gray-50 dark:bg-gray-900/50 border-dashed border-2 border-gray-200 dark:border-gray-800 opacity-75 hover:opacity-100 transition-opacity">
