@@ -15,15 +15,22 @@ import Dashboard from './pages/Dashboard'
 import AICounselor from './pages/AICounselor'
 import Profile from './pages/Profile'
 
+import PublicRoute from './components/Routes/PublicRoute'
+
 const router = createBrowserRouter(
   createRoutesFromElements(
     <Route>
       <Route path="/" element={<Layout />}>
         <Route index element={<LandingPage />} />
-        <Route path="login" element={<LoginPage />} />
-        <Route path="signup" element={<Register />} />
-        <Route path="forgot-password" element={<ForgotPassword />} />
-        <Route path="reset-password" element={<ResetPassword />} />
+
+        {/* Public Routes (Redirect to Dashboard if logged in) */}
+        <Route element={<PublicRoute />}>
+          <Route path="login" element={<LoginPage />} />
+          <Route path="signup" element={<Register />} />
+          <Route path="forgot-password" element={<ForgotPassword />} />
+          <Route path="reset-password" element={<ResetPassword />} />
+        </Route>
+
         <Route path="onboarding" element={<Onboarding />} />
         <Route path="dashboard" element={<Dashboard />} />
         <Route path="profile" element={<Profile />} />

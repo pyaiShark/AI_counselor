@@ -1,7 +1,7 @@
 from rest_framework import serializers
 from django.contrib.auth.hashers import make_password
 from django.contrib.auth import get_user_model
-from .models import User, AcademicBackground, StudyGoal, Budget, ExamsAndReadiness
+from .models import User, AcademicBackground, StudyGoal, Budget, ExamsAndReadiness, Task
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -58,6 +58,18 @@ class PasswordResetRequestSerializer(serializers.Serializer):
         if not UserModel.objects.filter(email=value).exists():
             raise serializers.ValidationError("No user with this email found.")
         return value
+        
+class TaskSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Task
+        fields = ['id', 'title', 'is_completed', 'task_type']
+        read_only_fields = ['id', 'task_type']
+        
+class TaskSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Task
+        fields = ['id', 'title', 'is_completed', 'task_type']
+        read_only_fields = ['id', 'task_type']
 
 class ProfileSerializer(serializers.ModelSerializer):
     academic_background = AcademicBackgroundSerializer(read_only=True)

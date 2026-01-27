@@ -145,4 +145,12 @@ export const getExamsReadiness = async () => {
     return response.data;
 };
 
+// Dashboard / Task APIs
+export const getTasks = () => api.get('/tasks/');
+export const generateTasks = () => api.post('/tasks/generate/');
+export const createTask = (taskData) => api.post('/tasks/', taskData);
+export const updateTask = (taskId, data) => api.patch(`/tasks/${taskId}/`, data);
+export const deleteTask = (taskId) => api.delete(`/tasks/${taskId}/`);
+export const getProfileStrength = () => api.get('/dashboard/strength/');
+
 export default api;

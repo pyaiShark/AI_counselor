@@ -30,8 +30,11 @@ from .serializers import (
     AcademicBackgroundSerializer,
     StudyGoalSerializer,
     BudgetSerializer,
-    ExamsAndReadinessSerializer
+    ExamsAndReadinessSerializer,
+    TaskSerializer
 )
+from .models import User, AcademicBackground, StudyGoal, Budget, ExamsAndReadiness, Task
+from .ai_service import evaluate_profile_strength, generate_tasks_for_user
 
 
 @api_view(['GET'])
@@ -242,6 +245,10 @@ def academic_background_view(request):
                 request.user.onboarding_step = 'StudyGoal'
                 request.user.save()
             
+            # Only trigger AI if user is updating profile after already completing onboarding
+            if request.user.onboarding_step == 'Completed':
+                trigger_ai_task_generation(request.user)
+
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     except Exception as e:
@@ -281,6 +288,10 @@ def study_goal_view(request):
                 request.user.onboarding_step = 'Budget'
                 request.user.save()
             
+            # Only trigger AI if user is updating profile after already completing onboarding
+            if request.user.onboarding_step == 'Completed':
+                trigger_ai_task_generation(request.user)
+
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     except Exception as e:
@@ -318,6 +329,10 @@ def budget_view(request):
                 request.user.onboarding_step = 'ExamsAndReadiness'
                 request.user.save()
             
+            # Only trigger AI if user is updating profile after already completing onboarding
+            if request.user.onboarding_step == 'Completed':
+                trigger_ai_task_generation(request.user)
+
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     except Exception as e:
@@ -353,6 +368,10 @@ def exams_readiness_view(request):
             request.user.onboarding_step = 'Completed'
             request.user.save()
             
+            # Use same logic: triggers because status IS now 'Completed'
+            if request.user.onboarding_step == 'Completed':
+                trigger_ai_task_generation(request.user)
+
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     except Exception as e:
@@ -373,4 +392,116 @@ def get_onboading_status(request):
             status=status.HTTP_200_OK
         )
     except Exception as e:
+        return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+@api_view(['GET', 'POST'])
+@permission_classes([IsAuthenticated])
+def tasks_view(request):
+    if request.method == 'GET':
+        tasks = Task.objects.filter(user=request.user).order_by('is_completed', '-created_at')
+        
+        # Auto-generate tasks if none exist (Basic Logic)
+        if not tasks.exists() and request.user.onboarding_step == 'Completed':
+            # Create a basic profile dict for AI
+            try:
+                profile_data = ProfileSerializer(request.user).data
+                generated_titles = generate_tasks_for_user(profile_data, "Building Profile")
+                
+                for title in generated_titles:
+                    Task.objects.create(
+                        user=request.user,
+                        title=title,
+                        task_type='PROFILE'
+                    )
+                # Re-fetch
+                tasks = Task.objects.filter(user=request.user).order_by('is_completed', '-created_at')
+            except Exception as e:
+                print(f"Error generating tasks: {e}")
+
+        serializer = TaskSerializer(tasks, many=True)
+        return Response({'status': 'success', 'data': serializer.data}, status=status.HTTP_200_OK)
+
+    elif request.method == 'POST':
+        # Create a PERSONAL task
+        serializer = TaskSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save(user=request.user, task_type='PERSONAL')
+            return Response({'status': 'success', 'data': serializer.data}, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+@api_view(['PATCH', 'DELETE'])
+@permission_classes([IsAuthenticated])
+def task_detail_view(request, task_id):
+    try:
+        task = Task.objects.get(id=task_id, user=request.user)
+    except Task.DoesNotExist:
+        return Response({'error': 'Task not found'}, status=status.HTTP_404_NOT_FOUND)
+
+    if request.method == 'PATCH':
+        # Toggle completion or update title
+        serializer = TaskSerializer(task, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response({'status': 'success', 'data': serializer.data})
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    elif request.method == 'DELETE':
+        task.delete()
+        return Response({'status': 'success', 'message': 'Task deleted'})
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def profile_strength_view(request):
+    try:
+        profile_data = ProfileSerializer(request.user).data
+        strength_data = evaluate_profile_strength(profile_data)
+        return Response({'status': 'success', 'data': strength_data})
+    except Exception as e:
+        return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+def trigger_ai_task_generation(user):
+    """
+    Helper function to trigger AI task generation for a specific user.
+    Can be called after profile updates or manually.
+    """
+    try:
+        # Get user profile
+        profile_data = ProfileSerializer(user).data
+        
+        # Get existing tasks to provide context to AI
+        existing_tasks = Task.objects.filter(user=user).values_list('title', flat=True)
+        
+        # Determine stage
+        current_stage = f"User is at {user.onboarding_step} stage"
+        
+        # Call AI service with acceptance-focused prompt
+        generated_titles = generate_tasks_for_user(profile_data, current_stage, list(existing_tasks))
+        
+        new_tasks = []
+        for title in generated_titles:
+            # Avoid exact duplicates
+            if not Task.objects.filter(user=user, title=title).exists():
+                task = Task.objects.create(
+                    user=user,
+                    title=title,
+                    task_type='PROFILE'
+                )
+                new_tasks.append(task)
+        
+        return new_tasks
+    except Exception as e:
+        print(f"Error in trigger_ai_task_generation: {str(e)}")
+        return []
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def generate_new_tasks_view(request):
+    try:
+        new_tasks = trigger_ai_task_generation(request.user)
+        serializer = TaskSerializer(new_tasks, many=True)
+        return Response({'status': 'success', 'data': serializer.data}, status=status.HTTP_201_CREATED)
+
+    except Exception as e:
+        print(f"Error generating new tasks: {str(e)}")
         return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

@@ -9,3 +9,4 @@ python-decouple
 django-allauth
 requests
 cryptography
+openai 

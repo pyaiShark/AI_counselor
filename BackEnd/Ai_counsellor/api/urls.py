@@ -23,4 +23,10 @@ urlpatterns = [
     path('onboarding/budget/', views.budget_view, name='budget'),
     path('onboarding/exams/', views.exams_readiness_view, name='exams_readiness'),
     path('onboarding/status/', views.get_onboading_status, name='get_onboading_status'),
+    
+    # Dashboard / Task Routes
+    path('tasks/', views.tasks_view, name='tasks'),
+    path('tasks/generate/', views.generate_new_tasks_view, name='generate_tasks'),
+    path('tasks/<int:task_id>/', views.task_detail_view, name='task_detail'),
+    path('dashboard/strength/', views.profile_strength_view, name='profile_strength'),
 ]

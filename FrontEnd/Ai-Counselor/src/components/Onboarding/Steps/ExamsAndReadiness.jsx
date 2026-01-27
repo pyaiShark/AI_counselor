@@ -17,9 +17,9 @@ const ExamsAndReadiness = ({ formData, updateFormData, onNext, onBack, onSkip, l
     ];
 
     const sopStatuses = [
-        "Not Started",
-        "Draft Ready",
-        "Completed"
+        "Not started",
+        "Draft",
+        "Ready"
     ];
 
     const isValid = formData.ieltsToeflStatus &&
