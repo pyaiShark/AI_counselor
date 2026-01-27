@@ -6,10 +6,8 @@ from rest_framework_simplejwt.views import (
 )
 
 urlpatterns = [
-    # path("", views.get_view, name="get"),
-    # path("add/", views.add, name="add"),
-    # path("update/<int:pk>", views.update, name="update"),
-    # path("delete/<int:pk>", views.delete, name="delete"),
+    path("profile/", views.profile_view, name="profile"),
+
     path("register/", views.register, name="register"),
     path("login/", views.login_view, name="login"), # Updated to login_view
 
@@ -18,4 +16,10 @@ urlpatterns = [
 
     path('forgot-password/', views.password_reset_request, name='password_reset_request'),
     path('reset-password/', views.password_reset, name='password_reset'),
+    
+    # Onboarding endpoints
+    path('onboarding/academic/', views.academic_background_view, name='academic_background'),
+    path('onboarding/study-goal/', views.study_goal_view, name='study_goal'),
+    path('onboarding/budget/', views.budget_view, name='budget'),
+    path('onboarding/exams/', views.exams_readiness_view, name='exams_readiness'),
 ]

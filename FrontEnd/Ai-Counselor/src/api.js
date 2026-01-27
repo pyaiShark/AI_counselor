@@ -26,7 +26,14 @@ api.interceptors.response.use(
     },
     async (error) => {
         const originalRequest = error.config;
-        if (error.response.status === 401 && !originalRequest._retry) {
+        
+        // Don't attempt to refresh token for login requests
+        // If login fails (401), we want the component to handle the error
+        if (originalRequest.url.includes('/login/')) {
+            return Promise.reject(error);
+        }
+
+        if (error.response?.status === 401 && !originalRequest._retry) {
             originalRequest._retry = true;
             const refreshToken = getRefreshToken();
             if (refreshToken) {
@@ -39,12 +46,18 @@ api.interceptors.response.use(
                     return api(originalRequest);
                 } catch (refreshError) {
                     removeToken();
-                    window.location.href = '/login';
+                    // Only redirect if not already on the login page to avoid loops
+                    if (window.location.pathname !== '/login') {
+                         window.location.href = '/login';
+                    }
                     return Promise.reject(refreshError);
                 }
             } else {
                 removeToken();
-                window.location.href = '/login';
+                // Only redirect if not already on the login page
+                if (window.location.pathname !== '/login') {
+                     window.location.href = '/login';
+                }
             }
         }
         return Promise.reject(error);
@@ -72,6 +85,37 @@ export const forgotPassword = async (email) => {
 
 export const resetPassword = async (password, uid, token) => {
     const response = await api.post(`/reset-password/?uid=${uid}&token=${token}`, { password });
+    return response.data;
+};
+
+export const getProfile = async () => {
+    const response = await api.get('/profile/');
+    return response.data;
+};
+
+export const updateProfile = async (data) => { // This part may be changed, review in case of error
+    const response = await api.put('/profile/', data);
+    return response.data;
+};
+
+
+export const submitAcademicBackground = async (data) => {
+    const response = await api.post('/onboarding/academic/', data);
+    return response.data;
+};
+
+export const submitStudyGoal = async (data) => {
+    const response = await api.post('/onboarding/study-goal/', data);
+    return response.data;
+};
+
+export const submitBudget = async (data) => {
+    const response = await api.post('/onboarding/budget/', data);
+    return response.data;
+};
+
+export const submitExamsReadiness = async (data) => {
+    const response = await api.post('/onboarding/exams/', data);
     return response.data;
 };
 

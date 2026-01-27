@@ -1,22 +1,54 @@
 from rest_framework import serializers
 from django.contrib.auth.hashers import make_password
 from django.contrib.auth import get_user_model
-from .models import User
+from .models import User, AcademicBackground, StudyGoal, Budget, ExamsAndReadiness
 
-# # class TaskSerializers(serializers.ModelSerializer):
-# #     class Meta:
-# #         model = Task
-# #         fields = ["id", "title", "completed", "created_at"]
 
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ["email", "password", "first_name", "last_name"]
-        extra_kwargs = {"password": {"write_only": True}}
+        fields = ["email", "password", "first_name", "last_name", "onboarding_step"]
+        extra_kwargs = {
+            "password": {
+                "write_only": True,  # password is write-only
+                "required": True,    # password required during creation
+            }
+        }
 
+    def validate_email(self, value):
+        UserModel = get_user_model()
+        if UserModel.objects.filter(email=value).exists():
+            raise serializers.ValidationError("This email address is already exist, try login")
+        return value
+    
     def create(self, validated_data):
+        # Hash the password before saving it
         validated_data['password'] = make_password(validated_data['password'])
         return super().create(validated_data)
+
+class AcademicBackgroundSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = AcademicBackground
+        fields = '__all__'
+        extra_kwargs = {'user': {'read_only': True}}
+
+class StudyGoalSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = StudyGoal
+        fields = '__all__'
+        extra_kwargs = {'user': {'read_only': True}}
+
+class BudgetSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Budget
+        fields = '__all__'
+        extra_kwargs = {'user': {'read_only': True}}
+
+class ExamsAndReadinessSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ExamsAndReadiness
+        fields = '__all__'
+        extra_kwargs = {'user': {'read_only': True}}
 
 class PasswordResetRequestSerializer(serializers.Serializer):
     email = serializers.EmailField()
@@ -26,3 +58,8 @@ class PasswordResetRequestSerializer(serializers.Serializer):
         if not UserModel.objects.filter(email=value).exists():
             raise serializers.ValidationError("No user with this email found.")
         return value
+
+class ProfileSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ["email", "first_name", "last_name", "date_joined", "onboarding_step"]

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Card from '@tailus-ui/Card';
 import Button from '@tailus-ui/Button';
@@ -8,16 +8,19 @@ import Label from '@tailus-ui/Label';
 import Separator from '@tailus-ui/Separator';
 import { Google } from './icons';
 
-import { login } from '../../api'; // Import login function
-import { setUserName } from '../../Auth'; // Import setUserName
+import { login as apiLogin } from '../../api'; // Renamed to avoid name collision
 import Loader from '../Loader';
 import FormError from '../FormError';
+import AuthContext from '../../context/AuthContext';
 
 export default function Login() {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [loading, setLoading] = useState(false);
-    const [error, setError] = useState(''); // Add error state
+    const [error, setError] = useState('');
+
+    // Use AuthContext
+    const { login } = useContext(AuthContext);
 
     const navigate = useNavigate();
 
@@ -26,16 +29,17 @@ export default function Login() {
         setLoading(true);
         setError('');
         try {
-            const data = await login(email, password);
-            if (data.first_name) {
-                setUserName(data.first_name);
-            } else if (data.email) {
-                // Fallback to email logic if first_name not present
-                const namePart = data.email.split('@')[0];
-                const formattedName = namePart.charAt(0).toUpperCase() + namePart.slice(1);
-                setUserName(formattedName);
+            const data = await apiLogin(email, password);
+            // Context handles state update and user setting if needed
+            login(data.first_name);
+
+            // Check onboarding status
+            const onboardingStatus = localStorage.getItem('onboarding_status');
+            if (onboardingStatus === 'completed') {
+                navigate('/dashboard');
+            } else {
+                navigate('/onboarding');
             }
-            navigate('/');
         } catch (err) {
             setError(err.response?.data?.error || 'Login failed. Please check your credentials.');
         } finally {

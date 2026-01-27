@@ -22,47 +22,24 @@ from django.utils.encoding import force_str
 from django.template.loader import render_to_string
 
 
-from .models import User
-from .serializers import UserSerializer, PasswordResetRequestSerializer
+from .models import User, AcademicBackground, StudyGoal, Budget, ExamsAndReadiness
+from .serializers import (
+    UserSerializer, 
+    PasswordResetRequestSerializer, 
+    ProfileSerializer,
+    AcademicBackgroundSerializer,
+    StudyGoalSerializer,
+    BudgetSerializer,
+    ExamsAndReadinessSerializer
+)
 
 
-# @api_view(['GET'])
-# @permission_classes([IsAuthenticated])
-# def get_view(request):
-#     tasks = Task.objects.filter(user=request.user).order_by('-id')
-#     if tasks:
-#         serializer = TaskSerializers(tasks, many=True)
-#         return Response(serializer.data)
-#     else: return Response([], status=status.HTTP_204_NO_CONTENT)
-
-# @api_view(['POST'])
-# @permission_classes([IsAuthenticated])
-# def add(request):
-#     serializer = TaskSerializers(data=request.data)
-#     if serializer.is_valid():
-#         k = serializer.save(user=User.objects.get(username=request.user))
-#         return Response(status=status.HTTP_201_CREATED)
-#     return Response(status=status.HTTP_406_NOT_ACCEPTABLE)
-
-# @api_view(['POST'])
-# @permission_classes([IsAuthenticated])
-# def update(request, pk):
-#     task = Task.objects.filter(user=request.user).get(id=pk)
-#     if task.completed:
-#         task.completed = False
-#     else: task.completed = True
-#     task.save()
-#     return Response("success", status=status.HTTP_200_OK)
-
-# @api_view(['DELETE'])
-# @permission_classes([IsAuthenticated])
-# def delete(request, pk):
-#     try:
-#         task = Task.objects.filter(user=request.user).get(id=pk)
-#         task.delete()
-#         return Response("Task Deleted!", status=status.HTTP_204_NO_CONTENT)
-#     except Exception:
-#         return Response(status=status.HTTP_401_UNAUTHORIZED)
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def profile_view(request):
+    serializer = ProfileSerializer(request.user)
+    print("Profile-Data------", serializer.data)
+    return Response(serializer.data, status=status.HTTP_200_OK)
 
 
 @api_view(['POST'])
@@ -109,6 +86,12 @@ def register(request):
             "refresh": str(refresh),
             "access": str(refresh.access_token),
         }, status=status.HTTP_201_CREATED)
+    else:
+        if "email" in serializer.errors:
+            return Response(
+                serializer.error_messages,
+                status=status.HTTP_409_CONFLICT
+            )
     print("User creation failed end.------------")
     return Response(
         serializer.errors,
@@ -130,7 +113,7 @@ def login_view(request):  # Renamed to avoid conflict with django.contrib.auth.l
     UserModel = get_user_model()
     try:
         user = UserModel.objects.get(email=email)
-        user = authenticate(request, username=user.username, password=password)  # Use username for authentication
+        user = authenticate(request, username=user.email, password=password)  # Use username for authentication
 
         if user is not None:
             refresh = RefreshToken.for_user(user)
@@ -187,6 +170,7 @@ def password_reset_request(request):
     
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+
 @api_view(['POST'])
 def password_reset(request):
     uid = request.query_params.get('uid')
@@ -212,5 +196,83 @@ def password_reset(request):
             return JsonResponse({"detail": "Password has been reset successfully."}, status=200)
         return JsonResponse({"error": "Password is required"}, status=400)
 
-    except Exception:
-        return JsonResponse({"error": "Invalid user"}, status=status.HTTP_400_BAD_REQUEST)
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def academic_background_view(request):
+    try:
+        serializer = AcademicBackgroundSerializer(data=request.data)
+        if serializer.is_valid():
+            # Save or update instance for current user
+            obj, created = AcademicBackground.objects.update_or_create(
+                user=request.user,
+                defaults=serializer.validated_data
+            )
+            
+            # Update onboarding step
+            request.user.onboarding_step = 'StudyGoal'
+            request.user.save()
+            
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    except Exception as e:
+        return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def study_goal_view(request):
+    try:
+        serializer = StudyGoalSerializer(data=request.data)
+        if serializer.is_valid():
+            obj, created = StudyGoal.objects.update_or_create(
+                user=request.user,
+                defaults=serializer.validated_data
+            )
+            
+            request.user.onboarding_step = 'Budget'
+            request.user.save()
+            
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    except Exception as e:
+        return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def budget_view(request):
+    try:
+        serializer = BudgetSerializer(data=request.data)
+        if serializer.is_valid():
+            obj, created = Budget.objects.update_or_create(
+                user=request.user,
+                defaults=serializer.validated_data
+            )
+            
+            request.user.onboarding_step = 'ExamsAndReadiness'
+            request.user.save()
+            
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    except Exception as e:
+        return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def exams_readiness_view(request):
+    try:
+        serializer = ExamsAndReadinessSerializer(data=request.data)
+        if serializer.is_valid():
+            obj, created = ExamsAndReadiness.objects.update_or_create(
+                user=request.user,
+                defaults=serializer.validated_data
+            )
+            
+            request.user.onboarding_step = 'Completed'
+            request.user.save()
+            
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    except Exception as e:
+        return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+

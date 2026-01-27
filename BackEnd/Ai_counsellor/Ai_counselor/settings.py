@@ -131,6 +131,8 @@ AUTH_PASSWORD_VALIDATORS = [
 ]
 
 
+SITE_ID = 1  # This should match the ID of your example.com site
+
 # Internationalization
 # https://docs.djangoproject.com/en/5.2/topics/i18n/
 
