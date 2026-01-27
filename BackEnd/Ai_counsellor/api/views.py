@@ -86,6 +86,7 @@ def register(request):
         'first_name': first_name,
         'last_name': last_name,
     }
+    print(user_data)
 
     # Pass data to serializer
     serializer = UserSerializer(data=user_data)
@@ -95,6 +96,7 @@ def register(request):
         # Ensure user is of type User
         UserModel = get_user_model()
         if not isinstance(user, UserModel):
+            print("User creation failed.------------")
             return Response({'error': "User creation failed."}, status=status.HTTP_400_BAD_REQUEST)
 
         # Generate JWT tokens for the newly registered user
@@ -102,11 +104,12 @@ def register(request):
 
         return Response({
             "message": "Registered successfully",
-            "email": email,  # Return the actual email
+            "email": email,
+            "first_name": user.first_name,
             "refresh": str(refresh),
             "access": str(refresh.access_token),
         }, status=status.HTTP_201_CREATED)
-
+    print("User creation failed end.------------")
     return Response(
         serializer.errors,
         status=status.HTTP_400_BAD_REQUEST
@@ -134,7 +137,8 @@ def login_view(request):  # Renamed to avoid conflict with django.contrib.auth.l
             return Response({
                 'refresh': str(refresh),
                 'access': str(refresh.access_token),
-                'email': user.email
+                'email': user.email,
+                'first_name': user.first_name,
             }, status=status.HTTP_200_OK)
         else:
             return Response(

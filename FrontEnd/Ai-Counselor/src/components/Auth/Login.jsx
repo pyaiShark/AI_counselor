@@ -1,0 +1,154 @@
+import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import Card from '@tailus-ui/Card';
+import Button from '@tailus-ui/Button';
+import { Text, Link as UiLink, Caption, Title } from '@tailus-ui/typography';
+import Input from '@tailus-ui/Input';
+import Label from '@tailus-ui/Label';
+import Separator from '@tailus-ui/Separator';
+import { Google } from './icons';
+
+import { login } from '../../api'; // Import login function
+import { setUserName } from '../../Auth'; // Import setUserName
+import Loader from '../Loader';
+import FormError from '../FormError';
+
+export default function Login() {
+    const [email, setEmail] = useState('');
+    const [password, setPassword] = useState('');
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState(''); // Add error state
+
+    const navigate = useNavigate();
+
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        setLoading(true);
+        setError('');
+        try {
+            const data = await login(email, password);
+            if (data.first_name) {
+                setUserName(data.first_name);
+            } else if (data.email) {
+                // Fallback to email logic if first_name not present
+                const namePart = data.email.split('@')[0];
+                const formattedName = namePart.charAt(0).toUpperCase() + namePart.slice(1);
+                setUserName(formattedName);
+            }
+            navigate('/');
+        } catch (err) {
+            setError(err.response?.data?.error || 'Login failed. Please check your credentials.');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    return (
+        <main className="relative flex items-center justify-center min-h-screen px-4 py-12 animate-fade-in bg-gray-100 dark:bg-gray-900 transition-colors duration-300">
+            <div className="absolute inset-0 -z-10 bg-[radial-gradient(45rem_50rem_at_top,theme(colors.indigo.100),white)] opacity-40 dark:bg-[radial-gradient(45rem_50rem_at_top,theme(colors.indigo.900),transparent)]" />
+
+            <Card className="w-full max-w-sm p-1 shadow-xl shadow-gray-950/5 dark:shadow-gray-950/20 bg-white/40 dark:bg-gray-900/40 backdrop-blur-xl border-white/60 dark:border-gray-800" variant="mixed">
+                <div data-rounded="large" className="p-8 sm:p-10">
+                    <div className="text-center">
+                        <div className="inline-block p-3 bg-blue-100 rounded-full mb-4 animate-float">
+                            <svg className="w-8 h-8 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
+                            </svg>
+                        </div>
+                        <Title size="xl" className="mb-2 text-blue-600 dark:text-blue-400 animate-pulse-gentle">
+                            Welcome Back
+                        </Title>
+                        <Text className="my-0 text-gray-500" size="sm">
+                            Sign in to continue your journey
+                        </Text>
+                    </div>
+
+                    <div className="mt-6">
+                        <FormError message={error} />
+                        <Button.Root
+                            variant="outline"
+                            intent="gray"
+                            size="sm"
+                            className="flex w-full items-center justify-center"
+                            onClick={() => window.location.href = 'http://127.0.0.1:8000/accounts/google/login/'}
+                        >
+                            <Button.Icon type="leading" size="xs">
+                                <Google />
+                            </Button.Icon>
+                            <Button.Label>Continue with Google</Button.Label>
+                        </Button.Root>
+                    </div>
+
+                    <form onSubmit={handleSubmit} className="mx-auto mt-8 space-y-6">
+                        <div className="space-y-6 rounded-[--btn-radius]">
+                            <div className="relative my-6 grid items-center gap-3 [grid-template-columns:1fr_auto_1fr]">
+                                <Separator className="h-px border-b" />
+                                <Caption as="span" className="block" size="sm">
+                                    Or
+                                </Caption>
+                                <Separator className="h-px border-b" />
+                            </div>
+
+                            <div className="space-y-4">
+                                <div className="space-y-2">
+                                    <Label size="sm" htmlFor="email">
+                                        Email
+                                    </Label>
+                                    <Input
+                                        id="email"
+                                        name="email"
+                                        type="email"
+                                        required
+                                        variant="outlined"
+                                        size="md"
+                                        placeholder="name@example.com"
+                                        value={email}
+                                        onChange={(e) => setEmail(e.target.value)}
+                                    />
+                                </div>
+                                <div className="space-y-2">
+                                    <div className="flex items-center justify-between">
+                                        <Label size="sm" htmlFor="password">
+                                            Password
+                                        </Label>
+                                        <UiLink href="/forgot-password" size="sm" variant="default" className="text-xs text-blue-600 hover:text-blue-700">
+                                            Forgot password?
+                                        </UiLink>
+                                    </div>
+                                    <Input
+                                        id="password"
+                                        name="password"
+                                        type="password"
+                                        required
+                                        variant="outlined"
+                                        size="md"
+                                        value={password}
+                                        onChange={(e) => setPassword(e.target.value)}
+                                    />
+                                </div>
+                            </div>
+                        </div>
+
+                        <Button.Root
+                            className="w-full bg-gradient-to-r from-blue-500 to-blue-400 hover:opacity-90 transition-all border-none"
+                            intent="primary"
+                            variant="solid"
+                            disabled={loading}
+                        >
+                            <Button.Label>{loading ? <Loader size="sm" className="text-white" /> : 'Sign In'}</Button.Label>
+                        </Button.Root>
+                    </form>
+                </div>
+
+                <Card variant="soft" className="mt-0 rounded-b-[calc(var(--card-radius)-0.25rem)] border-t border-gray-100 dark:border-gray-800 bg-gray-50/50 dark:bg-gray-800/50 p-4 text-center">
+                    <Caption className="my-0" size="sm" align="center">
+                        Don't have an account?{' '}
+                        <UiLink intent="neutral" size="sm" variant="underlined" href="/signup">
+                            Create account
+                        </UiLink>
+                    </Caption>
+                </Card>
+            </Card>
+        </main>
+    );
+}

@@ -77,7 +77,8 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'allauth.account.middleware.AccountMiddleware'
+    'allauth.account.middleware.AccountMiddleware',
+    'corsheaders.middleware.CorsMiddleware'
 ]
 
 ROOT_URLCONF = 'Ai_counselor.urls'
@@ -155,7 +156,7 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 # Allow your frontend origin
 CORS_ALLOWED_ORIGINS = [
     "http://127.0.0.1:5173",
-    "https://127.0.0.1:5173",
+    "https://127.0.0.1:5173"
 ]
 
 ACCOUNT_LOGIN_METHODS = ('email',)  # Only allow login via email
