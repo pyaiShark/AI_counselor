@@ -62,9 +62,9 @@ const ProfileStrength = () => {
 
             <div className="flex-1 space-y-3">
                 {metrics.map((metric, idx) => (
-                    <div key={idx} className={`flex flex-wrap items-center justify-between p-3 rounded-lg border gap-2 ${getStatusColor(metric.value)}`}>
+                    <div key={idx} className={`flex flex-wrap items-center justify-between p-2.5 rounded-lg border gap-2 ${getStatusColor(metric.value)}`}>
                         <Text className="font-medium truncate mr-2 min-w-0 flex-1">{metric.label}</Text>
-                        <div className="flex items-center gap-1.5 font-bold text-sm whitespace-nowrap flex-shrink-0">
+                        <div className="flex items-center gap-1.5 font-bold text-sm text-right">
                             {metric.value}
                             {metric.value?.toLowerCase().includes('strong') || metric.value?.toLowerCase().includes('completed') || metric.value?.toLowerCase().includes('ready') ?
                                 <CheckCircle className="size-4" /> : <AlertCircle className="size-4" />}

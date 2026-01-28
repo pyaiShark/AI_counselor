@@ -110,8 +110,28 @@ class ExamsAndReadiness(models.Model):
     ]
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='exams_readiness')
     ielts_toefl_status = models.CharField(max_length=100, blank=True, null=True)
+    ielts_toefl_score = models.CharField(max_length=50, blank=True, null=True)
     gre_gmat_status = models.CharField(max_length=100, blank=True, null=True)
+    gre_gmat_score = models.CharField(max_length=50, blank=True, null=True)
     sop_status = models.CharField(max_length=100, choices=SOP_CHOICES, blank=True, null=True)
 
     def __str__(self):
         return f"{self.user.email} - Exams & Readiness"
+
+class ShortlistedUniversity(models.Model):
+    CATEGORY_CHOICES = [
+        ('Dream', 'Dream'),
+        ('Target', 'Target'),
+        ('Safe', 'Safe'),
+    ]
+
+    user = models.ForeignKey(User, related_name="shortlisted_universities", on_delete=models.CASCADE)
+    university_name = models.CharField(max_length=255)
+    country = models.CharField(max_length=100)
+    category = models.CharField(max_length=20, choices=CATEGORY_CHOICES)
+    is_locked = models.BooleanField(default=False)
+    data = models.JSONField(null=True, blank=True)  # Snapshot of university data
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.user.email} - {self.university_name} ({self.category})"

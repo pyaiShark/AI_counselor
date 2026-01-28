@@ -15,6 +15,65 @@ import StudyGoal from '../components/Onboarding/Steps/StudyGoal';
 import Budget from '../components/Onboarding/Steps/Budget';
 import ExamsAndReadiness from '../components/Onboarding/Steps/ExamsAndReadiness';
 
+
+
+const SectionCard = ({
+    title,
+    sectionKey,
+    Component,
+    dataDisplay,
+    editingSection,
+    handleEdit,
+    handleCancel,
+    handleSave,
+    loading,
+    formData,
+    updateFormData
+}) => {
+    const isEditing = editingSection === sectionKey;
+
+    return (
+        <Card className="p-6 relative overflow-visible">
+            <div className="flex justify-between items-start mb-4">
+                <Title size="lg">{title}</Title>
+                {!isEditing && (
+                    <Button.Root size="xs" variant="outline" onClick={() => handleEdit(sectionKey)}>
+                        <Button.Label>Edit</Button.Label>
+                    </Button.Root>
+                )}
+            </div>
+
+            {isEditing ? (
+                <div className="space-y-4 animate-fade-in">
+                    <Component
+                        formData={formData}
+                        updateFormData={updateFormData}
+                        // Reuse components but override navigation checks
+                        onNext={handleSave}
+                        // Disable skip/back for edit mode, or make them cancel
+                        onSkip={handleCancel}
+                        onBack={handleCancel}
+                        loading={loading}
+                        isEditing={true}
+                    />
+                    <div className="flex gap-2 justify-end mt-4 border-t pt-4">
+                        <Button.Root variant="ghost" onClick={handleCancel} size="sm" disabled={loading}>
+                            <Button.Label>Cancel</Button.Label>
+                        </Button.Root>
+                        <Button.Root onClick={handleSave} size="sm" disabled={loading}>
+                            <Button.Label>{loading ? 'Saving...' : 'Save Changes'}</Button.Label>
+                        </Button.Root>
+                    </div>
+                </div>
+            ) : (
+                <div className="space-y-2 text-sm text-gray-600 dark:text-gray-300">
+                    {dataDisplay}
+                </div>
+            )}
+        </Card>
+    );
+};
+
 const Profile = () => {
     const [loading, setLoading] = useState(true);
     const [profileData, setProfileData] = useState(null);
@@ -56,8 +115,8 @@ const Profile = () => {
                 greGmatStatus: data.exams_readiness?.gre_gmat_status || '',
                 sopStatus: data.exams_readiness?.sop_status || '',
                 // Scores are not in DB models yet, so they will be empty/lost on refresh
-                ieltsToeflScore: '',
-                greGmatScore: ''
+                ieltsToeflScore: data.exams_readiness?.ielts_toefl_score || '',
+                greGmatScore: data.exams_readiness?.gre_gmat_score || '',
             };
 
             const fullProfile = {
@@ -112,7 +171,9 @@ const Profile = () => {
             } else if (editingSection === 'exams') {
                 await submitExamsReadiness({
                     ielts_toefl_status: formData.ieltsToeflStatus,
+                    ielts_toefl_score: formData.ieltsToeflScore,
                     gre_gmat_status: formData.greGmatStatus,
+                    gre_gmat_score: formData.greGmatScore,
                     sop_status: formData.sopStatus
                 });
             }
@@ -133,50 +194,7 @@ const Profile = () => {
 
     if (loading && !profileData) return <div className="flex justify-center p-20"><Loader /></div>;
 
-    const SectionCard = ({ title, sectionKey, Component, dataDisplay }) => {
-        const isEditing = editingSection === sectionKey;
 
-        return (
-            <Card className="p-6 relative overflow-visible">
-                <div className="flex justify-between items-start mb-4">
-                    <Title size="lg">{title}</Title>
-                    {!isEditing && (
-                        <Button.Root size="xs" variant="outline" onClick={() => handleEdit(sectionKey)}>
-                            <Button.Label>Edit</Button.Label>
-                        </Button.Root>
-                    )}
-                </div>
-
-                {isEditing ? (
-                    <div className="space-y-4 animate-fade-in">
-                        <Component
-                            formData={formData}
-                            updateFormData={updateFormData}
-                            // Reuse components but override navigation checks
-                            onNext={handleSave}
-                            // Disable skip/back for edit mode, or make them cancel
-                            onSkip={handleCancel}
-                            onBack={handleCancel}
-                            loading={loading}
-                            isEditing={true}
-                        />
-                        <div className="flex gap-2 justify-end mt-4 border-t pt-4">
-                            <Button.Root variant="ghost" onClick={handleCancel} size="sm" disabled={loading}>
-                                <Button.Label>Cancel</Button.Label>
-                            </Button.Root>
-                            <Button.Root onClick={handleSave} size="sm" disabled={loading}>
-                                <Button.Label>{loading ? 'Saving...' : 'Save Changes'}</Button.Label>
-                            </Button.Root>
-                        </div>
-                    </div>
-                ) : (
-                    <div className="space-y-2 text-sm text-gray-600 dark:text-gray-300">
-                        {dataDisplay}
-                    </div>
-                )}
-            </Card>
-        );
-    };
 
     return (
         <div className="max-w-4xl mx-auto p-6 space-y-8 animate-fade-in">
@@ -201,6 +219,13 @@ const Profile = () => {
                     title="Academic Background"
                     sectionKey="academic"
                     Component={AcademicBackground}
+                    editingSection={editingSection}
+                    handleEdit={handleEdit}
+                    handleCancel={handleCancel}
+                    handleSave={handleSave}
+                    loading={loading}
+                    formData={formData}
+                    updateFormData={updateFormData}
                     dataDisplay={(
                         <>
                             <div className="grid grid-cols-2 gap-4">
@@ -229,6 +254,13 @@ const Profile = () => {
                     title="Study Goals"
                     sectionKey="goals"
                     Component={StudyGoal}
+                    editingSection={editingSection}
+                    handleEdit={handleEdit}
+                    handleCancel={handleCancel}
+                    handleSave={handleSave}
+                    loading={loading}
+                    formData={formData}
+                    updateFormData={updateFormData}
                     dataDisplay={(
                         <>
                             <div className="grid grid-cols-2 gap-4">
@@ -257,6 +289,13 @@ const Profile = () => {
                     title="Budget & Funding"
                     sectionKey="budget"
                     Component={Budget}
+                    editingSection={editingSection}
+                    handleEdit={handleEdit}
+                    handleCancel={handleCancel}
+                    handleSave={handleSave}
+                    loading={loading}
+                    formData={formData}
+                    updateFormData={updateFormData}
                     dataDisplay={(
                         <>
                             <div className="grid grid-cols-2 gap-4">
@@ -277,16 +316,29 @@ const Profile = () => {
                     title="Exams & Readiness"
                     sectionKey="exams"
                     Component={ExamsAndReadiness}
+                    editingSection={editingSection}
+                    handleEdit={handleEdit}
+                    handleCancel={handleCancel}
+                    handleSave={handleSave}
+                    loading={loading}
+                    formData={formData}
+                    updateFormData={updateFormData}
                     dataDisplay={(
                         <>
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
                                     <span className="font-semibold block">IELTS/TOEFL:</span>
                                     {profileData?.onboarding_data?.ieltsToeflStatus || '-'}
+                                    {profileData?.onboarding_data?.ieltsToeflScore && (
+                                        <span className="text-gray-500 text-sm ml-1">({profileData.onboarding_data.ieltsToeflScore})</span>
+                                    )}
                                 </div>
                                 <div>
                                     <span className="font-semibold block">GRE/GMAT:</span>
                                     {profileData?.onboarding_data?.greGmatStatus || '-'}
+                                    {profileData?.onboarding_data?.greGmatScore && (
+                                        <span className="text-gray-500 text-sm ml-1">({profileData.onboarding_data.greGmatScore})</span>
+                                    )}
                                 </div>
                                 <div>
                                     <span className="font-semibold block">SOP Status:</span>

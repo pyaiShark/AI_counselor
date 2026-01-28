@@ -140,3 +140,61 @@ def generate_tasks_for_user(profile_data, current_stage, existing_tasks=None):
     except Exception as e:
         print(f"AI Service Error (Tasks): {str(e)}")
         return ["Complete your profile information"]
+
+def get_university_recommendations(profile_data, universities_list):
+    """
+    Classifies a list of universities into Dream, Target, and Safe based on the user's profile.
+    """
+    try:
+        # safely get nested data
+        academic = profile_data.get('academic_background') or {}
+        exams = profile_data.get('exams_readiness') or {}
+        study_goal = profile_data.get('study_goal') or {}
+
+        # Simplify university list found in prompt to save tokens (just sends names+ranks)
+        simple_uni_list = [{"name": u.get('name'), "rank": u.get('rank', 999)} for u in universities_list]
+        
+        prompt = f"""
+        Act as an University Admissions Expert. Classify the universities below into 'Dream', 'Target', and 'Safe' categories based on the student's profile.
+
+        Student Profile:
+        - GPA/Grades: {academic.get('gpa', 'N/A')}
+        - Education: {academic.get('education_level', 'N/A')} in {academic.get('degree_major', 'N/A')}
+        - Test Scores: IELTS/TOEFL: {exams.get('ielts_toefl_score', 'N/A')}, GRE/GMAT: {exams.get('gre_gmat_score', 'N/A')}
+        - Target Degree: {study_goal.get('intended_degree', 'N/A')} in {study_goal.get('field_of_study', 'N/A')}
+
+        Universities to Classify (Rank provided):
+        {json.dumps(simple_uni_list)}
+
+        Rules:
+        - Dream: Ambitious but possible, or rank is very high compared to profile.
+        - Target: Good fit, profile matches average requirements.
+        - Safe: High probability of acceptance.
+        - Split reasonably evenly if possible, but prioritize realistic fit.
+        
+        Return ONLY valid JSON in this format:
+        {{
+            "Dream": ["University Name 1", "University Name 2"],
+            "Target": ["University Name 3"],
+            "Safe": ["University Name 4"]
+        }}
+        """
+
+        completion = client.chat.completions.create(
+            model="openai/gpt-oss-20b", # Using Groq supported model
+            messages=[
+                {"role": "system", "content": "You are an admissions expert that outputs only JSON."},
+                {"role": "user", "content": prompt}
+            ],
+            temperature=0.3,
+            response_format={"type": "json_object"}
+        )
+
+        text = completion.choices[0].message.content
+        return json.loads(text)
+
+    except Exception as e:
+        print(f"AI Service Error (Recommendations): {str(e)}")
+        # Fallback to empty if AI fails, effectively returning no recommendations or handled by caller
+        return {"Dream": [], "Target": [], "Safe": []}
+

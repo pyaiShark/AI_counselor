@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { getOnboardingStatus } from '../../api';
 import Card from '@tailus-ui/Card';
 import { Title } from '@tailus-ui/typography';
 
@@ -11,24 +12,52 @@ const StageIndicator = ({ currentStage = 1 }) => {
     ];
 
     const [progress, setProgress] = useState(0);
+    const [activeStage, setActiveStage] = useState(currentStage);
 
     useEffect(() => {
-        // Animate progress bar on mount
+        const checkOnboardingStatus = async () => {
+            try {
+                const response = await getOnboardingStatus();
+                if (response.status === 'success') {
+                    const { onboarding_step } = response.data;
+
+                    // Logic: If Onboarding is 'Completed' -> Move to Stage 2 (Discovering Universities)
+                    if (onboarding_step === 'Completed') {
+                        if (currentStage < 2) {
+                            setActiveStage(2);
+                        } else {
+                            setActiveStage(currentStage);
+                        }
+                    } else {
+                        setActiveStage(currentStage);
+                    }
+                }
+            } catch (error) {
+                console.error("Error fetching onboarding status:", error);
+                setActiveStage(currentStage);
+            }
+        };
+
+        checkOnboardingStatus();
+    }, [currentStage]);
+
+    useEffect(() => {
+        // Animate progress bar on mount or stage change
         const timer = setTimeout(() => {
-            const targetStep = Math.min(currentStage, 4);
+            const targetStep = Math.min(activeStage, 4);
             const percentage = ((targetStep - 1) / (stages.length - 1)) * 100;
             setProgress(Math.max(0, Math.min(percentage, 100)));
         }, 300);
 
         return () => clearTimeout(timer);
-    }, [currentStage]);
+    }, [activeStage]);
 
     return (
         <Card className="p-6 md:p-8 h-full">
             <Title size="lg" className="mb-6 font-bold text-center md:text-left">Application Stage</Title>
 
             {/* CONTAINER: Flex Column on Mobile (Vertical), Row on Desktop (Horizontal) */}
-            <div className="relative flex flex-col md:flex-row justify-between w-full max-w-4xl mx-auto md:py-4 min-h-[300px] md:min-h-0">
+            <div className="relative flex flex-col md:flex-row md:justify-between gap-8 md:gap-0 w-full max-w-4xl mx-auto md:py-4">
 
                 {/* ---------------- DRAWING THE LINES (Background & Active) ---------------- */}
 
@@ -46,8 +75,8 @@ const StageIndicator = ({ currentStage = 1 }) => {
 
                 {/* ---------------- STAGE ITEMS ---------------- */}
                 {stages.map((stage) => {
-                    const isCompleted = stage.id < currentStage;
-                    const isCurrent = stage.id === currentStage;
+                    const isCompleted = stage.id < activeStage;
+                    const isCurrent = stage.id === activeStage;
 
                     // CIRCLE STYLING
                     let circleClasses = "relative z-10 flex items-center justify-center rounded-full border-4 transition-all duration-500 bg-white dark:bg-gray-900 shrink-0 ";
@@ -56,11 +85,11 @@ const StageIndicator = ({ currentStage = 1 }) => {
                     circleClasses += "w-10 h-10 md:w-12 md:h-12 ";
 
                     if (isCompleted) {
-                        circleClasses += "border-blue-500 text-blue-500";
+                        circleClasses += "bg-green-100 dark:bg-green-900/30 border-green-500 text-blue-600 dark:text-blue-400";
                     } else if (isCurrent) {
-                        circleClasses += "border-blue-500 shadow-[0_0_15px_rgba(59,130,246,0.6)] scale-110";
+                        circleClasses += "bg-white dark:bg-gray-900 border-blue-500 shadow-[0_0_15px_rgba(59,130,246,0.6)] scale-110";
                     } else {
-                        circleClasses += "border-gray-200 dark:border-gray-700 text-gray-300 dark:text-gray-600";
+                        circleClasses += "bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-700 text-gray-300 dark:text-gray-600";
                     }
 
                     // FONT Styles

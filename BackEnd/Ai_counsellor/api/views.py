@@ -12,14 +12,14 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from django.core.mail import send_mail
 from django.template.loader import render_to_string
 from django.utils.html import strip_tags
-from django.utils.http import urlsafe_base64_encode
-from django.utils.encoding import force_bytes
+from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
+from django.utils.encoding import force_bytes, force_str
 from django.contrib.auth.tokens import default_token_generator
 from django.http import JsonResponse
 from django.conf import settings
-from django.utils.http import urlsafe_base64_decode
-from django.utils.encoding import force_str
-from django.template.loader import render_to_string
+from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
+import json
+import os
 
 
 from .models import User, AcademicBackground, StudyGoal, Budget, ExamsAndReadiness
@@ -34,7 +34,7 @@ from .serializers import (
     TaskSerializer
 )
 from .models import User, AcademicBackground, StudyGoal, Budget, ExamsAndReadiness, Task
-from .ai_service import evaluate_profile_strength, generate_tasks_for_user
+from .ai_service import evaluate_profile_strength, generate_tasks_for_user, get_university_recommendations
 
 
 @api_view(['GET'])
@@ -504,4 +504,226 @@ def generate_new_tasks_view(request):
 
     except Exception as e:
         print(f"Error generating new tasks: {str(e)}")
+        return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+@api_view(['GET'])
+def top_20_universities_view(request):
+    try:
+        # Construct path to the JSON file
+        base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        file_path = os.path.join(base_dir, 'University_data', 'top_20_famous.json')
+        
+        if not os.path.exists(file_path):
+             return Response({'error': 'Data file not found'}, status=status.HTTP_404_NOT_FOUND)
+
+        with open(file_path, 'r', encoding='utf-8') as f:
+            data = json.load(f)
+            
+        # Pagination
+        page_num = request.GET.get('page', 1)
+        paginator = Paginator(data, 5) # 5 items per page
+        
+        try:
+            page_obj = paginator.page(page_num)
+        except PageNotAnInteger:
+            page_obj = paginator.page(1)
+        except EmptyPage:
+            page_obj = paginator.page(paginator.num_pages)
+            
+        return Response({
+            'status': 'success',
+            'data': page_obj.object_list,
+            'pagination': {
+                'current_page': page_obj.number,
+                'total_pages': paginator.num_pages,
+                'total_items': paginator.count,
+                'has_next': page_obj.has_next(),
+                'has_previous': page_obj.has_previous()
+            }
+        }, status=status.HTTP_200_OK)
+        
+    except Exception as e:
+        return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def university_recommendations_view(request):
+    try:
+        # 1. Provide recommendations based on profile using Groq AI
+        
+        base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        file_path = os.path.join(base_dir, 'University_data', 'university_data_by_rank.json')
+
+        if not os.path.exists(file_path):
+             return Response({'error': 'University data file not found'}, status=status.HTTP_404_NOT_FOUND)
+
+        with open(file_path, 'r', encoding='utf-8') as f:
+            all_countries_data = json.load(f)
+
+        # Flatten list
+        all_universities = []
+        for country_data in all_countries_data:
+            all_universities.extend(country_data.get('universities', []))
+        
+        # Pagination params
+        page = int(request.query_params.get('page', 1))
+        limit = int(request.query_params.get('limit', 12))
+        
+        # Limit to top 50 for AI Context processing (total pool)
+        # We will paginate WITHIN this pool or the larger pool depending on requirement.
+        # Assuming we want to recommend from the top 50 overall, but process in batches.
+        # OR: do we want to search through ALL? 
+        # For performance, let's keep the pool we search in reasonably large (e.g. 50-100), 
+        # but only process 'limit' amount at a time for the *response*?
+        # WAIT: The AI takes a list and classifies. If we send only 4 universities to the AI, it classifies those 4.
+        # This is exactly what we want for speed.
+        
+        total_pool_size = 60 # Check top 60 relevant ones
+        all_universities = sorted(all_universities, key=lambda x: x.get('rank', 9999))[:total_pool_size]
+        
+        start_idx = (page - 1) * limit
+        end_idx = start_idx + limit
+        
+        current_batch = all_universities[start_idx:end_idx]
+        has_next = end_idx < len(all_universities)
+        
+        if not current_batch:
+             return Response({
+                'status': 'success',
+                'data': {'Dream': [], 'Target': [], 'Safe': []},
+                'pagination': {'has_next': False, 'page': page}
+            }, status=status.HTTP_200_OK)
+        
+        # Prepare Profile Data
+        profile_data = ProfileSerializer(request.user).data
+
+        # Call AI Service for ONLY the current batch
+        ai_response = get_university_recommendations(profile_data, current_batch)
+        
+        # Map AI response (which just has names) back to full university objects
+        recommendations = {
+            'Dream': [],
+            'Target': [],
+            'Safe': []
+        }
+
+        # Get user's current locked universities
+        from .models import ShortlistedUniversity
+        locked_unis = ShortlistedUniversity.objects.filter(user=request.user, is_locked=True).values_list('university_name', flat=True)
+        locked_set = set(locked_unis)
+
+        # create a lookup dict for faster access
+        uni_lookup = {u.get('name'): u for u in current_batch}
+
+        for category, uni_names in ai_response.items():
+            if category in recommendations:
+                for name in uni_names:
+                    if name in uni_lookup:
+                        uni_data = uni_lookup[name].copy()
+                        uni_data['is_locked'] = name in locked_set
+                        recommendations[category].append(uni_data)
+
+        return Response({
+            'status': 'success',
+            'data': recommendations,
+            'locked_universities': list(locked_set), # Provide this for frontend initial state
+            'pagination': {
+                'has_next': has_next,
+                'page': page,
+                'next_page': page + 1 if has_next else None
+            }
+        }, status=status.HTTP_200_OK)
+
+    except Exception as e:
+        return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def university_evaluation_view(request):
+    uni_name = request.query_params.get('name')
+    if not uni_name:
+        return Response({'error': 'University name parameter is required'}, status=status.HTTP_400_BAD_REQUEST)
+
+    try:
+        # Mock Evaluation Data
+        # In real app, this would query a detailed DB or external API
+        
+        evaluation = {
+            'university_name': uni_name,
+            'fit_score': 'High',
+            'why_it_fits': [
+                "Strong program matches your study goal.",
+                "Located in a prefered country."
+            ],
+            'key_risks': [
+                "High cost of living area.",
+                "Competitive acceptance rate."
+            ],
+            'cost_level': 'High', # Low, Medium, High
+            'acceptance_chance': 'Medium', # Low, Medium, High
+        }
+        
+        return Response({'status': 'success', 'data': evaluation}, status=status.HTTP_200_OK)
+
+    except Exception as e:
+        return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def shortlist_action_view(request):
+    try:
+        from .models import ShortlistedUniversity
+        
+        action = request.data.get('action') # 'lock', 'unlock'
+        uni_name = request.data.get('university_name')
+        category = request.data.get('category') # Dream, Target, Safe (needed for lock)
+        country = request.data.get('country', 'Unknown')
+        
+        if not action or not uni_name:
+             return Response({'error': 'Action and university_name are required'}, status=status.HTTP_400_BAD_REQUEST)
+
+        if action == 'lock':
+            # Check if another university is already locked
+            existing_lock = ShortlistedUniversity.objects.filter(user=request.user, is_locked=True).exclude(university_name=uni_name).first()
+            if existing_lock:
+                return Response({
+                    'status': 'error', 
+                    'message': f'You can only lock one university at a time. Please unlock "{existing_lock.university_name}" first.'
+                }, status=status.HTTP_400_BAD_REQUEST)
+
+            # Check if already locked (same one)
+            if ShortlistedUniversity.objects.filter(user=request.user, university_name=uni_name, is_locked=True).exists():
+                return Response({'status': 'success', 'message': 'University already locked'})
+            
+            # Create or update
+            ShortlistedUniversity.objects.update_or_create(
+                user=request.user,
+                university_name=uni_name,
+                defaults={
+                    'category': category,
+                    'country': country,
+                    'is_locked': True
+                }
+            )
+            return Response({'status': 'success', 'message': f'Locked {uni_name}'})
+
+        elif action == 'unlock':
+             # Unlock logic
+             try:
+                 obj = ShortlistedUniversity.objects.get(user=request.user, university_name=uni_name)
+                 obj.is_locked = False
+                 obj.save()
+                 # Optionally delete if we want "unlock" to mean "remove from shortlist"
+                 # obj.delete() 
+                 return Response({'status': 'success', 'message': f'Unlocked {uni_name}'})
+             except ShortlistedUniversity.DoesNotExist:
+                 return Response({'error': 'University not found in shortlist'}, status=status.HTTP_404_NOT_FOUND)
+        
+        return Response({'error': 'Invalid action'}, status=status.HTTP_400_BAD_REQUEST)
+
+    except Exception as e:
         return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

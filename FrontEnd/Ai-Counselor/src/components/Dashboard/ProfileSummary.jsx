@@ -40,9 +40,9 @@ const ProfileSummary = ({ profile }) => {
                 </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {items.map((item, index) => (
-                    <div key={index} className="flex flex-col p-3 border rounded-lg bg-gray-50/50 dark:bg-gray-900/20 dark:border-gray-800">
+                    <div key={index} className="flex flex-col p-3 border rounded-lg bg-gray-50/50 dark:bg-gray-900/20 dark:border-gray-800 min-w-0">
                         <div className="flex items-center gap-2 mb-1">
                             {item.icon}
                             <Caption className="text-gray-500">{item.label}</Caption>

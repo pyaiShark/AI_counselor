@@ -4,7 +4,7 @@ import Card from '../components/tailus-ui/Card';
 import Button from '../components/tailus-ui/Button';
 import { Title, Text } from '../components/tailus-ui/typography';
 import Timeline from '../components/Dashboard/Timeline';
-import { getProfile } from '../api';
+import { getProfile, prefetchRecommendations } from '../api';
 
 // New Components
 import ProfileSummary from '../components/Dashboard/ProfileSummary';
@@ -76,11 +76,10 @@ const Dashboard = () => {
     const isCompleted = status === 'completed';
 
     return (
-        <div className="min-h-screen bg-gray-50 dark:bg-gray-950 p-6 md:p-12 pt-28 space-y-8">
-            <div className="max-w-7xl mx-auto space-y-8">
-
+        <div className="min-h-screen bg-gray-50 dark:bg-gray-950 p-4 md:p-12 pt-24 md:pt-28 space-y-6 md:space-y-8">
+            <div className="max-w-7xl mx-auto space-y-6 md:space-y-8">
                 {/* Header Section */}
-                <div className="relative overflow-hidden rounded-2xl bg-white/40 dark:bg-gray-900/40 backdrop-blur-xl border border-white/20 shadow-xl p-6 md:p-8">
+                <div className="relative overflow-hidden rounded-2xl bg-white/40 dark:bg-gray-900/40 backdrop-blur-xl border border-white/20 shadow-xl p-5 md:p-8">
                     <div className="absolute top-0 right-0 -mt-10 -mr-10 w-64 h-64 bg-gradient-to-br from-blue-400/20 to-purple-400/20 rounded-full blur-3xl" />
                     <div className="absolute bottom-0 left-0 -mb-10 -ml-10 w-64 h-64 bg-gradient-to-tr from-emerald-400/20 to-teal-400/20 rounded-full blur-3xl" />
 
@@ -118,7 +117,7 @@ const Dashboard = () => {
                         </div>
 
                         {/* Middle Row: AI Tools */}
-                        <div className="grid md:grid-cols-2 gap-6 md:h-96">
+                        <div className="grid md:grid-cols-2 gap-6">
                             <ProfileStrength />
                             <TodoList />
                         </div>
@@ -143,18 +142,24 @@ const Dashboard = () => {
                             </Link>
 
                             {/* University Shortlist - Unlocked */}
-                            <Card className="p-8 space-y-5 bg-white dark:bg-gray-900 border border-transparent hover:border-blue-500/30 shadow-lg hover:shadow-2xl transition-all duration-300 cursor-pointer">
-                                <div className="w-12 h-12 rounded-xl bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400 flex items-center justify-center">
-                                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" /></svg>
-                                </div>
-                                <div>
-                                    <Title size="lg" className="font-semibold">University Shortlist</Title>
-                                    <Text className="mt-2 text-gray-600 dark:text-gray-400">Curate and manage your dream list of universities.</Text>
-                                </div>
-                                <div className="inline-block px-3 py-1 bg-purple-100 dark:bg-purple-900/20 text-purple-600 dark:text-purple-400 text-xs font-bold rounded-full uppercase tracking-wider">
-                                    Active
-                                </div>
-                            </Card>
+                            <Link
+                                to="/university-shortlist"
+                                className="block h-full"
+                                onMouseEnter={() => prefetchRecommendations(1, 12)}
+                            >
+                                <Card className="h-full p-8 space-y-5 bg-white dark:bg-gray-900 border border-transparent hover:border-blue-500/30 shadow-lg hover:shadow-2xl transition-all duration-300 cursor-pointer">
+                                    <div className="w-12 h-12 rounded-xl bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400 flex items-center justify-center">
+                                        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" /></svg>
+                                    </div>
+                                    <div>
+                                        <Title size="lg" className="font-semibold">University Shortlist</Title>
+                                        <Text className="mt-2 text-gray-600 dark:text-gray-400">Curate and manage your dream list of universities.</Text>
+                                    </div>
+                                    <div className="inline-block px-3 py-1 bg-purple-100 dark:bg-purple-900/20 text-purple-600 dark:text-purple-400 text-xs font-bold rounded-full uppercase tracking-wider">
+                                        Active
+                                    </div>
+                                </Card>
+                            </Link>
                         </div>
                     </div>
                 ) : (

@@ -153,4 +153,30 @@ export const updateTask = (taskId, data) => api.patch(`/tasks/${taskId}/`, data)
 export const deleteTask = (taskId) => api.delete(`/tasks/${taskId}/`);
 export const getProfileStrength = () => api.get('/dashboard/strength/');
 
+// University Shortlisting APIs
+let uniRecommendationsCache = null;
+
+export const prefetchRecommendations = (page = 1, limit = 12) => {
+    // Only cache the first page for now to simplify
+    if (page === 1 && !uniRecommendationsCache) {
+        uniRecommendationsCache = api.get(`/universities/recommendations/?page=${page}&limit=${limit}`);
+    }
+    return uniRecommendationsCache;
+};
+
+export const getUniversityRecommendations = (page = 1, limit = 12) => {
+    if (page === 1 && uniRecommendationsCache) {
+        return uniRecommendationsCache;
+    }
+    return api.get(`/universities/recommendations/?page=${page}&limit=${limit}`);
+};
+
+export const evaluateUniversity = (uniName) => api.get(`/universities/evaluate/?name=${encodeURIComponent(uniName)}`);
+export const shortlistAction = (data) => {
+    // Clear cache if user changes their shortlist to ensure recommendations stay fresh
+    uniRecommendationsCache = null;
+    return api.post('/universities/shortlist/', data);
+};
+
 export default api;
+

@@ -86,16 +86,16 @@ const TodoList = () => {
 
     return (
         <Card className="p-4 h-full flex flex-col">
-            <div className="flex items-center justify-between mb-4">
+            <div className="flex flex-wrap items-center justify-between mb-4 gap-2">
                 <div className="flex items-center gap-2">
                     <ListTodo className="size-5 text-purple-500" />
                     <Title size="base" className="font-bold">AI To-Do List</Title>
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 ml-auto">
                     <Button.Root size="xs" variant="ghost" onClick={handleGenerateTasks} disabled={generating}>
                         {generating ? <Loader2 className="size-3 animate-spin" /> : <Sparkles className="size-3 text-yellow-500" />}
                     </Button.Root>
-                    <div className="text-xs text-gray-400">
+                    <div className="text-xs text-gray-400 whitespace-nowrap">
                         {tasks.filter(t => t.is_completed).length}/{tasks.length} Done
                     </div>
                 </div>
@@ -130,7 +130,7 @@ const TodoList = () => {
                                 </div>
 
                                 <div className="flex-1 min-w-0">
-                                    <Text className={`truncate text-sm ${task.is_completed ? "line-through text-gray-500" : ""}`}>
+                                    <Text className={`text-sm break-words ${task.is_completed ? "line-through text-gray-500" : ""}`}>
                                         {task.title}
                                     </Text>
                                 </div>

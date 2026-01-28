@@ -14,6 +14,7 @@ import Onboarding from './pages/Onboarding'
 import Dashboard from './pages/Dashboard'
 import AICounselor from './pages/AICounselor'
 import Profile from './pages/Profile'
+import UniversityShortlisting from './pages/UniversityShortlisting'
 
 import PublicRoute from './components/Routes/PublicRoute'
 
@@ -35,6 +36,7 @@ const router = createBrowserRouter(
         <Route path="dashboard" element={<Dashboard />} />
         <Route path="profile" element={<Profile />} />
         <Route path="ai-counselor" element={<AICounselor />} />
+        <Route path="university-shortlist" element={<UniversityShortlisting />} />
       </Route>
     </Route>
   )

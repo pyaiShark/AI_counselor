@@ -1,0 +1,300 @@
+[
+  {
+    "web_pages": [
+      "http://www.cam.ac.uk/"
+    ],
+    "name": "University of Cambridge",
+    "alpha_two_code": "GB",
+    "state-province": null,
+    "domains": [
+      "cam.ac.uk"
+    ],
+    "country": "United Kingdom",
+    "rank": 2,
+    "logo": "https://upload.wikimedia.org/wikipedia/commons/c/c3/Coat_of_Arms_of_the_University_of_Cambridge.svg"
+  },
+  {
+    "web_pages": [
+      "http://www.harvard.edu/"
+    ],
+    "name": "Harvard University",
+    "alpha_two_code": "US",
+    "state-province": null,
+    "domains": [
+      "harvard.edu"
+    ],
+    "country": "United States",
+    "rank": 5,
+    "logo": "https://www.harvard.edu/wp-content/uploads/2021/03/100408_Yard_045-1200x630.jpg"
+  },
+  {
+    "web_pages": [
+      "http://www.imperial.ac.uk/"
+    ],
+    "name": "Imperial College London",
+    "alpha_two_code": "GB",
+    "state-province": null,
+    "domains": [
+      "imperial.ac.uk",
+      "ic.ac.uk"
+    ],
+    "country": "United Kingdom",
+    "rank": 7,
+    "logo": "https://upload.wikimedia.org/wikipedia/commons/c/c5/Shield_of_Imperial_College_London.svg"
+  },
+  {
+    "web_pages": [
+      "http://www.uchicago.edu/"
+    ],
+    "name": "University of Chicago",
+    "alpha_two_code": "US",
+    "state-province": null,
+    "domains": [
+      "uchicago.edu"
+    ],
+    "country": "United States",
+    "rank": 10,
+    "logo": "https://mc-1b49d921-43a2-4264-88fd-647979-cdn-endpoint.azureedge.net/-/media/images/logo-background/campus_aerial_2-min.png?h=627&amp;iar=0&amp;w=1200&amp;rev=d36b0970f9a34d84a096aedd844c5817&amp;extension=webp&amp;hash=867FAB1D36D89FF38234F25B73AB22EE"
+  },
+  {
+    "web_pages": [
+      "http://www.bloomu.edu/"
+    ],
+    "name": "Bloomsburg University of Pennsylvania",
+    "alpha_two_code": "US",
+    "state-province": "Pennsylvania",
+    "domains": [
+      "bloomu.edu"
+    ],
+    "country": "United States",
+    "rank": 13,
+    "logo": "https://imgs.search.brave.com/bzBgmr8PiRRzf0pir8hhZzsR_HrebcV1KmF5nb0MlCE/rs:fit:500:0:1:0/g:ce/aHR0cHM6Ly9tZWRp/YS5pc3RvY2twaG90/by5jb20vaWQvMTMz/NzMyNTEzMi9waG90/by9lbnRyYW5jZS10/by1ibG9vbXNidXJn/LXVuaXZlcnNpdHku/anBnP3M9NjEyeDYx/MiZ3PTAmaz0yMCZj/PXdZWkhrT3FQNU1V/a2hHcTRRT3BNbHNQ/cjhBM2xhOVBTZHpG/UFNNQ3dISnc9"
+  },
+  {
+    "web_pages": [
+      "http://www.iup.edu/"
+    ],
+    "name": "Indiana University of Pennsylvania",
+    "alpha_two_code": "US",
+    "state-province": "Pennsylvania",
+    "domains": [
+      "iup.edu"
+    ],
+    "country": "United States",
+    "rank": 13,
+    "logo": "https://www.iup.edu/_hp_images/social-sharev1.jpg"
+  },
+  {
+    "web_pages": [
+      "http://www.mansfield.edu/"
+    ],
+    "name": "Mansfield University of Pennsylvania",
+    "alpha_two_code": "US",
+    "state-province": "Pennsylvania",
+    "domains": [
+      "mansfield.edu"
+    ],
+    "country": "United States",
+    "rank": 13,
+    "logo": "https://www.commonwealthu.edu/sites/default/files/2026-01/1900x1135-mansfield-winter-view-25.jpg"
+  },
+  {
+    "web_pages": [
+      "http://www.sru.edu/"
+    ],
+    "name": "Slippery Rock University of Pennsylvania",
+    "alpha_two_code": "US",
+    "state-province": "Pennsylvania",
+    "domains": [
+      "sru.edu"
+    ],
+    "country": "United States",
+    "rank": 13,
+    "logo": "http://www.sru.edu//images/web/sru-circle-logo.jpg"
+  },
+  {
+    "web_pages": [
+      "http://www.tsinghua.edu.cn/"
+    ],
+    "name": "Tsinghua University",
+    "alpha_two_code": "CN",
+    "state-province": null,
+    "domains": [
+      "tsinghua.edu.cn"
+    ],
+    "country": "China",
+    "rank": 14,
+    "logo": "https://upload.wikimedia.org/wikipedia/commons/e/ec/Tsinghua_University_Logo.svg"
+  },
+  {
+    "web_pages": [
+      "http://www.ed.ac.uk/"
+    ],
+    "name": "University of Edinburgh",
+    "alpha_two_code": "GB",
+    "state-province": null,
+    "domains": [
+      "ed.ac.uk"
+    ],
+    "country": "United Kingdom",
+    "rank": 15,
+    "logo": "https://upload.wikimedia.org/wikipedia/commons/f/fa/The_Temple_of_Fame%2C_McEwan_Hall%2C_Edinburgh%2C_4.jpg"
+  },
+  {
+    "web_pages": [
+      "http://www.princeton.edu/"
+    ],
+    "name": "Princeton University",
+    "alpha_two_code": "US",
+    "state-province": null,
+    "domains": [
+      "princeton.edu"
+    ],
+    "country": "United States",
+    "rank": 17,
+    "logo": "https://www.princeton.edu//sites/default/files/images/2017/06/20060425_NassauHall_JJ_IMG_5973.jpg"
+  },
+  {
+    "web_pages": [
+      "https://www.ntu.edu.sg/"
+    ],
+    "name": "Nanyang Technological University",
+    "alpha_two_code": "SG",
+    "state-province": null,
+    "domains": [
+      "ntu.edu.sg"
+    ],
+    "country": "Singapore",
+    "rank": 19,
+    "logo": "https://imgs.search.brave.com/8kFIXDB3Nx92WPZDZhWQQctqdTeaaIFOYNbO5ZpEFPI/rs:fit:860:0:0:0/g:ce/aHR0cHM6Ly9tZWRp/YS5pc3RvY2twaG90/by5jb20vaWQvMjE1/NDA5NzM3NC9waG90/by9uYW55YW5nLXRl/Y2hub2xvZ2ljYWwt/dW5pdmVyc2l0eS5q/cGc_cz02MTJ4NjEy/Jnc9MCZrPTIwJmM9/QXo3N2ZuMUJIdGw1/N0VtY3Z0UUdDVGtC/ekM5cTRSLWhSVnpQ/bks4YkFMTT0"
+  },
+  {
+    "web_pages": [
+      "http://www.u-tokyo.ac.jp/"
+    ],
+    "name": "University of Tokyo",
+    "alpha_two_code": "JP",
+    "state-province": null,
+    "domains": [
+      "u-tokyo.ac.jp"
+    ],
+    "country": "Japan",
+    "rank": 23,
+    "logo": "https://upload.wikimedia.org/wikipedia/commons/f/fa/2024_Yasuda_Auditorium_-_Tokyo_University.jpg"
+  },
+  {
+    "web_pages": [
+      "http://www.jhuapl.edu/"
+    ],
+    "name": "Johns Hopkins University Applied Physics Laboratory",
+    "alpha_two_code": "US",
+    "state-province": null,
+    "domains": [
+      "jhuapl.edu"
+    ],
+    "country": "United States",
+    "rank": 24,
+    "logo": "https://upload.wikimedia.org/wikipedia/commons/0/02/JHU_APL_logo.svg"
+  },
+  {
+    "web_pages": [
+      "http://www.manchester.ac.uk/"
+    ],
+    "name": "University of Manchester",
+    "alpha_two_code": "GB",
+    "state-province": null,
+    "domains": [
+      "manchester.ac.uk",
+      "mbs.ac.uk",
+      "man.ac.uk"
+    ],
+    "country": "United Kingdom",
+    "rank": 28,
+    "logo": "https://www.manchester.ac.uk/Museum-1200x630.jpg"
+  },
+  {
+    "web_pages": [
+      "http://www.anu.edu.au/"
+    ],
+    "name": "Australian National University",
+    "alpha_two_code": "AU",
+    "state-province": "Australian Capital Territory",
+    "domains": [
+      "anu.edu.au"
+    ],
+    "country": "Australia",
+    "rank": 30,
+    "logo": "https://upload.wikimedia.org/wikipedia/commons/2/2a/AUS_Canberra%2C_Central%2C_Australian_National_University_016.jpg"
+  },
+  {
+    "web_pages": [
+      "http://www.northwestern.edu/"
+    ],
+    "name": "Northwestern University",
+    "alpha_two_code": "US",
+    "state-province": null,
+    "domains": [
+      "northwestern.edu"
+    ],
+    "country": "United States",
+    "rank": 32,
+    "logo": "https://upload.wikimedia.org/wikipedia/commons/5/56/Northwestern_University_seal.svg"
+  },
+  {
+    "web_pages": [
+      "http://www.scar.utoronto.ca/"
+    ],
+    "name": "University of Toronto, Scarborough",
+    "alpha_two_code": "CA",
+    "state-province": "Ontario",
+    "domains": [
+      "scar.utoronto.ca"
+    ],
+    "country": "Canada",
+    "rank": 35,
+    "logo": "https://upload.wikimedia.org/wikipedia/commons/b/ba/University_of_Toronto_Scarborough_aerial_view_2024.jpg"
+  },
+  {
+    "web_pages": [
+      "http://www.utm.utoronto.ca/"
+    ],
+    "name": "University of Toronto, Mississauga",
+    "alpha_two_code": "CA",
+    "state-province": "Ontario",
+    "domains": [
+      "utm.utoronto.ca"
+    ],
+    "country": "Canada",
+    "rank": 35,
+    "logo": "https://upload.wikimedia.org/wikipedia/commons/1/1b/Maanjiwe_nendamowinan_North_Field.jpg"
+  },
+  {
+    "web_pages": [
+      "http://www.utoronto.ca/"
+    ],
+    "name": "University of Toronto",
+    "alpha_two_code": "CA",
+    "state-province": "Ontario",
+    "domains": [
+      "utoronto.ca",
+      "toronto.edu"
+    ],
+    "country": "Canada",
+    "rank": 35,
+    "logo": "https://www.utoronto.ca/sites/default/files/2025-07/UofT-st-george-campus.jpg"
+  },
+  {
+        "web_pages": [
+          "http://www.kufs.ac.jp/"
+        ],
+        "name": "Kyoto University of Foreign Studies",
+        "alpha_two_code": "JP",
+        "state-province": null,
+        "domains": [
+          "kufs.ac.jp"
+        ],
+        "country": "Japan",
+        "rank": 36,
+        "logo": "https://imgs.search.brave.com/tnjHXiCdrx9qCpl0DazAphDWDOzz09afcHSbZIpyaSk/rs:fit:500:0:1:0/g:ce/aHR0cHM6Ly9pbWFn/ZS5mcmVlLWFwcGx5/LmNvbS9nYWxsZXJ5/L2wvdW5pL2dhbGxl/cnkvbGcvMTAzOTIw/MDI5NC9mMTdiYWZm/OTVkNDc5MDJmYzNk/YTkzM2NmNTgxYWRh/ZWE2YzNiOThkLmpw/Zz9zPTY0MA"
+      }
+]

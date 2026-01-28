@@ -29,4 +29,10 @@ urlpatterns = [
     path('tasks/generate/', views.generate_new_tasks_view, name='generate_tasks'),
     path('tasks/<int:task_id>/', views.task_detail_view, name='task_detail'),
     path('dashboard/strength/', views.profile_strength_view, name='profile_strength'),
+    path('university/top-20/', views.top_20_universities_view, name='top_20_universities'),
+    
+    # University Shortlisting Flow
+    path('universities/recommendations/', views.university_recommendations_view, name='university_recommendations'),
+    path('universities/evaluate/', views.university_evaluation_view, name='university_evaluation'),
+    path('universities/shortlist/', views.shortlist_action_view, name='shortlist_action'),
 ]
