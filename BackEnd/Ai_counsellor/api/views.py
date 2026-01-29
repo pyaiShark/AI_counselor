@@ -3,6 +3,7 @@ from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
 
+from django.shortcuts import redirect
 from django.http.response import JsonResponse
 from django.contrib.auth import authenticate, login, logout, get_user_model
 
@@ -37,12 +38,27 @@ from .models import User, AcademicBackground, StudyGoal, Budget, ExamsAndReadine
 from .ai_service import evaluate_profile_strength, generate_tasks_for_user, get_university_recommendations
 
 
-@api_view(['GET'])
+@api_view(['GET', 'PUT'])
 @permission_classes([IsAuthenticated])
 def profile_view(request):
-    serializer = ProfileSerializer(request.user)
-    #print("Profile-Data------", serializer.data)
-    return Response(serializer.data, status=status.HTTP_200_OK)
+    if request.method == 'GET':
+        serializer = ProfileSerializer(request.user)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+    
+    elif request.method == 'PUT':
+        serializer = ProfileSerializer(request.user, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            # Invalidate AI Cache
+            from .models import ProfileAICache
+            ProfileAICache.objects.filter(user=request.user).update(recommendations=None, strength_data=None)
+            
+            # Optionally trigger tasks
+            if request.user.onboarding_step == 'Completed':
+                trigger_ai_task_generation(request.user)
+                
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 @api_view(['POST'])
@@ -158,8 +174,9 @@ def password_reset_request(request):
             uid = urlsafe_base64_encode(force_bytes(user.pk))
             token = default_token_generator.make_token(user)
 
-            # Prepare the reset link
-            reset_link = f"{request.build_absolute_uri('/reset-password/')}?uid={uid}&token={token}"
+            # Prepare the reset link pointing to frontend
+            frontend_url = "http://127.0.0.1:5173/reset-password"
+            reset_link = f"{frontend_url}?uid={uid}&token={token}"
             subject = "Password Reset Requested"
             html_message = render_to_string("password_reset_email.html", {"reset_link": reset_link})
             plain_message = strip_tags(html_message)
@@ -169,7 +186,7 @@ def password_reset_request(request):
 
             return Response({"detail": "Password reset email has been sent."}, status=status.HTTP_200_OK)
         except UserModel.DoesNotExist:
-            return Response({"error": "No user with this email found."}, status=status.HTTP_404_NOT_FOUND)
+            return Response({"error": "This email doesn't exist. Please try to sign up."}, status=status.HTTP_404_NOT_FOUND)
     
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
@@ -245,6 +262,10 @@ def academic_background_view(request):
                 request.user.onboarding_step = 'StudyGoal'
                 request.user.save()
             
+            # Invalidate AI Cache
+            from .models import ProfileAICache
+            ProfileAICache.objects.filter(user=request.user).update(recommendations=None, strength_data=None)
+
             # Only trigger AI if user is updating profile after already completing onboarding
             if request.user.onboarding_step == 'Completed':
                 trigger_ai_task_generation(request.user)
@@ -288,6 +309,10 @@ def study_goal_view(request):
                 request.user.onboarding_step = 'Budget'
                 request.user.save()
             
+            # Invalidate AI Cache
+            from .models import ProfileAICache
+            ProfileAICache.objects.filter(user=request.user).update(recommendations=None, strength_data=None)
+
             # Only trigger AI if user is updating profile after already completing onboarding
             if request.user.onboarding_step == 'Completed':
                 trigger_ai_task_generation(request.user)
@@ -329,6 +354,10 @@ def budget_view(request):
                 request.user.onboarding_step = 'ExamsAndReadiness'
                 request.user.save()
             
+            # Invalidate AI Cache
+            from .models import ProfileAICache
+            ProfileAICache.objects.filter(user=request.user).update(recommendations=None, strength_data=None)
+
             # Only trigger AI if user is updating profile after already completing onboarding
             if request.user.onboarding_step == 'Completed':
                 trigger_ai_task_generation(request.user)
@@ -368,6 +397,10 @@ def exams_readiness_view(request):
             request.user.onboarding_step = 'Completed'
             request.user.save()
             
+            # Invalidate AI Cache
+            from .models import ProfileAICache
+            ProfileAICache.objects.filter(user=request.user).update(recommendations=None, strength_data=None)
+
             # Use same logic: triggers because status IS now 'Completed'
             if request.user.onboarding_step == 'Completed':
                 trigger_ai_task_generation(request.user)
@@ -442,7 +475,10 @@ def task_detail_view(request, task_id):
         serializer = TaskSerializer(task, data=request.data, partial=True)
         if serializer.is_valid():
             serializer.save()
-            return Response({'status': 'success', 'data': serializer.data})
+            # Invalidate AI Cache
+            from .models import ProfileAICache
+            ProfileAICache.objects.filter(user=request.user).update(recommendations=None, strength_data=None)
+            return Response(serializer.data)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     elif request.method == 'DELETE':
@@ -453,9 +489,20 @@ def task_detail_view(request, task_id):
 @permission_classes([IsAuthenticated])
 def profile_strength_view(request):
     try:
+        from .models import ProfileAICache
+        cache_obj, created = ProfileAICache.objects.get_or_create(user=request.user)
+        
+        if cache_obj.strength_data:
+            return Response({'status': 'success', 'data': cache_obj.strength_data, 'cached': True})
+
         profile_data = ProfileSerializer(request.user).data
         strength_data = evaluate_profile_strength(profile_data)
-        return Response({'status': 'success', 'data': strength_data})
+        
+        # Save to cache
+        cache_obj.strength_data = strength_data
+        cache_obj.save()
+        
+        return Response({'status': 'success', 'data': strength_data, 'cached': False})
     except Exception as e:
         return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
@@ -571,50 +618,44 @@ def university_recommendations_view(request):
         page = int(request.query_params.get('page', 1))
         limit = int(request.query_params.get('limit', 12))
         
-        # Limit to top 50 for AI Context processing (total pool)
-        # We will paginate WITHIN this pool or the larger pool depending on requirement.
-        # Assuming we want to recommend from the top 50 overall, but process in batches.
-        # OR: do we want to search through ALL? 
-        # For performance, let's keep the pool we search in reasonably large (e.g. 50-100), 
-        # but only process 'limit' amount at a time for the *response*?
-        # WAIT: The AI takes a list and classifies. If we send only 4 universities to the AI, it classifies those 4.
-        # This is exactly what we want for speed.
-        
         total_pool_size = 60 # Check top 60 relevant ones
-        all_universities = sorted(all_universities, key=lambda x: x.get('rank', 9999))[:total_pool_size]
+        top_60_unis = sorted(all_universities, key=lambda x: x.get('rank', 9999))[:total_pool_size]
+
+        # Check Cache
+        from .models import ProfileAICache, ShortlistedUniversity
+        cache_obj, created = ProfileAICache.objects.get_or_create(user=request.user)
         
+        if not cache_obj.recommendations:
+            # Prepare Profile Data
+            profile_data = ProfileSerializer(request.user).data
+            # Call AI Service for THE ENTIRE TOP 60 to cache classifications
+            ai_response = get_university_recommendations(profile_data, top_60_unis)
+            cache_obj.recommendations = ai_response
+            cache_obj.save()
+            is_cached = False
+        else:
+            ai_response = cache_obj.recommendations
+            is_cached = True
+
+        # Slicing for current page from the classified pool
         start_idx = (page - 1) * limit
         end_idx = start_idx + limit
-        
-        current_batch = all_universities[start_idx:end_idx]
-        has_next = end_idx < len(all_universities)
-        
+        current_batch = top_60_unis[start_idx:end_idx]
+        has_next = end_idx < len(top_60_unis)
+
         if not current_batch:
              return Response({
                 'status': 'success',
                 'data': {'Dream': [], 'Target': [], 'Safe': []},
                 'pagination': {'has_next': False, 'page': page}
             }, status=status.HTTP_200_OK)
-        
-        # Prepare Profile Data
-        profile_data = ProfileSerializer(request.user).data
-
-        # Call AI Service for ONLY the current batch
-        ai_response = get_university_recommendations(profile_data, current_batch)
-        
-        # Map AI response (which just has names) back to full university objects
-        recommendations = {
-            'Dream': [],
-            'Target': [],
-            'Safe': []
-        }
 
         # Get user's current locked universities
-        from .models import ShortlistedUniversity
         locked_unis = ShortlistedUniversity.objects.filter(user=request.user, is_locked=True).values_list('university_name', flat=True)
         locked_set = set(locked_unis)
 
-        # create a lookup dict for faster access
+        # Map classified indices back to objects for the current batch
+        recommendations = {'Dream': [], 'Target': [], 'Safe': []}
         uni_lookup = {u.get('name'): u for u in current_batch}
 
         for category, uni_names in ai_response.items():
@@ -628,7 +669,8 @@ def university_recommendations_view(request):
         return Response({
             'status': 'success',
             'data': recommendations,
-            'locked_universities': list(locked_set), # Provide this for frontend initial state
+            'cached': is_cached,
+            'locked_universities': list(locked_set),
             'pagination': {
                 'has_next': has_next,
                 'page': page,
@@ -727,3 +769,28 @@ def shortlist_action_view(request):
 
     except Exception as e:
         return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+@api_view(['GET'])
+def google_login_callback(request):
+    """
+    Callback view that allauth redirects to after successful Google login.
+    Generates JWT tokens for the authenticated user and redirects to frontend.
+    """
+    print(f"Callback reached. User: {request.user}")
+    print(f"Is authenticated: {request.user.is_authenticated}")
+    
+    if not request.user.is_authenticated:
+        print("User not authenticated in callback")
+        return redirect('http://127.0.0.1:5173/login?error=Authentication failed')
+
+    # Generate JWT tokens
+    refresh = RefreshToken.for_user(request.user)
+    access_token = str(refresh.access_token)
+    refresh_token = str(refresh)
+    
+    print(f"Tokens generated for {request.user.email}")
+
+    # Redirect to frontend with tokens
+    frontend_url = f"http://127.0.0.1:5173/login?access={access_token}&refresh={refresh_token}"
+    return redirect(frontend_url)

@@ -56,7 +56,7 @@ class PasswordResetRequestSerializer(serializers.Serializer):
     def validate_email(self, value):
         UserModel = get_user_model()
         if not UserModel.objects.filter(email=value).exists():
-            raise serializers.ValidationError("No user with this email found.")
+            raise serializers.ValidationError("This email doesn't exist. Please try to sign up.")
         return value
         
 class TaskSerializer(serializers.ModelSerializer):

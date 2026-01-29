@@ -11,6 +11,9 @@ urlpatterns = [
     path("register/", views.register, name="register"),
     path("login/", views.login_view, name="login"), # Updated to login_view
 
+    # Google Login callback
+    path("auth/google/callback/", views.google_login_callback, name="google_callback"),
+
     path('token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
 

@@ -135,3 +135,14 @@ class ShortlistedUniversity(models.Model):
 
     def __str__(self):
         return f"{self.user.email} - {self.university_name} ({self.category})"
+
+# We will use this model to cache the AI recommendations and strength data
+class ProfileAICache(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='ai_cache')
+    recommendations = models.JSONField(null=True, blank=True)
+    strength_data = models.JSONField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"AI Cache for {self.user.email}"

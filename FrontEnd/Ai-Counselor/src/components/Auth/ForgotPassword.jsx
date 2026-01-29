@@ -24,7 +24,20 @@ export default function ForgotPassword() {
             await forgotPassword(email);
             setSubmitted(true);
         } catch (err) {
-            setError(err.response?.data?.error || 'Failed to send reset email. Please try again.');
+            const errorData = err.response?.data;
+            let errorMessage = 'Failed to send reset email. Please try again.';
+
+            if (errorData) {
+                if (typeof errorData.error === 'string') {
+                    errorMessage = errorData.error;
+                } else if (errorData.email && Array.isArray(errorData.email)) {
+                    errorMessage = errorData.email[0];
+                } else if (typeof errorData === 'string') {
+                    errorMessage = errorData;
+                }
+            }
+
+            setError(errorMessage);
         } finally {
             setLoading(false);
         }

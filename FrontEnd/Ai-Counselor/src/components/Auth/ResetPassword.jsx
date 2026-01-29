@@ -37,7 +37,7 @@ export default function ResetPassword() {
 
         try {
             await resetPassword(password, uid, token);
-            setStatus({ type: 'success', message: 'Password reset successfully!' });
+            setStatus({ type: 'success', message: 'Password reset successfully! Redirecting to login...' });
             setTimeout(() => {
                 navigate('/login');
             }, 2000);

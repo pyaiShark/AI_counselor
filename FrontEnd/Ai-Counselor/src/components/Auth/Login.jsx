@@ -1,5 +1,5 @@
-import React, { useState, useContext } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useContext, useEffect } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import Card from '@tailus-ui/Card';
 import Button from '@tailus-ui/Button';
 import { Text, Link as UiLink, Caption, Title } from '@tailus-ui/typography';
@@ -12,6 +12,7 @@ import { login as apiLogin, getProfile } from '../../api';
 import Loader from '../Loader';
 import FormError from '../FormError';
 import AuthContext from '../../context/AuthContext';
+import { setToken } from '../../Auth';
 
 export default function Login() {
     const [email, setEmail] = useState('');
@@ -22,7 +23,45 @@ export default function Login() {
     // Use AuthContext
     const { login } = useContext(AuthContext);
 
+    const [searchParams] = useSearchParams();
     const navigate = useNavigate();
+
+    useEffect(() => {
+        const access = searchParams.get('access');
+        const refresh = searchParams.get('refresh');
+        const urlError = searchParams.get('error');
+
+        if (access && refresh) {
+            handleGoogleLoginSuccess(access, refresh);
+        } else if (urlError) {
+            setError(urlError);
+            navigate('/login', { replace: true });
+        }
+    }, [searchParams]);
+
+    const handleGoogleLoginSuccess = async (access, refresh) => {
+        setLoading(true);
+        try {
+            setToken(access, refresh);
+
+            // Fetch profile to get name and onboarding status
+            const profile = await getProfile();
+            login(profile.first_name);
+
+            if (profile.onboarding_step === 'Completed') {
+                navigate('/dashboard');
+            } else {
+                navigate('/onboarding');
+            }
+        } catch (err) {
+            setError('Google login failed to synchronize. Please try again.');
+            console.error(err);
+        } finally {
+            setLoading(false);
+            // Clear tokens from URL
+            window.history.replaceState({}, document.title, window.location.pathname);
+        }
+    };
 
     const handleSubmit = async (e) => {
         e.preventDefault();

@@ -60,6 +60,7 @@ INSTALLED_APPS = [
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework_simplejwt.authentication.JWTAuthentication',
+        'rest_framework.authentication.SessionAuthentication', # Added to capture user from allauth session
     )
 }
 
@@ -92,7 +93,7 @@ ROOT_URLCONF = 'Ai_counselor.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [BASE_DIR / 'templates'],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -181,10 +182,15 @@ DEFAULT_FROM_EMAIL = config('DEFAULT_FROM_EMAIL')
 # Email-related settings for django-allauth
 #ACCOUNT_EMAIL_REQUIRED = True remove latter
 
+ACCOUNT_USER_MODEL_USERNAME_FIELD = None  # Disable username field
+# ACCOUNT_EMAIL_REQUIRED = True  # Make email required
+# ACCOUNT_EMAIL_VERIFICATION = "mandatory"  # Enforce email verification
+ACCOUNT_UNIQUE_EMAIL = True  # Ensure email uniqueness
+
 ACCOUNT_SIGNUP_FIELDS = ['email*', 'first_name*', 'last_name*', 'password1*', 'password2*']
 ACCOUNT_EMAIL_VERIFICATION = 'optional'  # Set to 'mandatory' if preferred
-LOGIN_REDIRECT_URL = '/'  # Redirect after login
-LOGOUT_REDIRECT_URL = '/'  # Redirect after logout
+LOGIN_REDIRECT_URL = '/api/auth/google/callback/'  # Redirect to backend callback to handle JWT
+LOGOUT_REDIRECT_URL = 'http://127.0.0.1:5173'  # Redirect after logout
 
 # Social account providers
 SOCIALACCOUNT_PROVIDERS = {
