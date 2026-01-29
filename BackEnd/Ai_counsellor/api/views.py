@@ -18,14 +18,12 @@ from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from django.utils.encoding import force_bytes, force_str
 from decouple import config
 from django.contrib.auth.tokens import default_token_generator
-from django.http import JsonResponse
 from django.conf import settings
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 import json
 import os
 
 
-from .models import User, AcademicBackground, StudyGoal, Budget, ExamsAndReadiness
 from .serializers import (
     UserSerializer, 
     PasswordResetRequestSerializer, 
@@ -84,7 +82,6 @@ def register(request):
         'first_name': first_name,
         'last_name': last_name,
     }
-    print(user_data)
 
     # Pass data to serializer
     serializer = UserSerializer(data=user_data)
@@ -94,7 +91,6 @@ def register(request):
         # Ensure user is of type User
         UserModel = get_user_model()
         if not isinstance(user, UserModel):
-            print("User creation failed.------------")
             return Response({'error': "User creation failed."}, status=status.HTTP_400_BAD_REQUEST)
 
         # Generate JWT tokens for the newly registered user
@@ -113,7 +109,6 @@ def register(request):
                 serializer.error_messages,
                 status=status.HTTP_409_CONFLICT
             )
-    print("User creation failed end.------------")
     return Response(
         serializer.errors,
         status=status.HTTP_400_BAD_REQUEST
@@ -483,7 +478,7 @@ def tasks_view(request):
                 # Re-fetch
                 tasks = Task.objects.filter(user=request.user).order_by('is_completed', '-created_at')
             except Exception as e:
-                print(f"Error generating tasks: {e}")
+                return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
         serializer = TaskSerializer(tasks, many=True)
         return Response({'status': 'success', 'data': serializer.data}, status=status.HTTP_200_OK)
@@ -553,7 +548,6 @@ def trigger_ai_task_generation(user):
         # If user already has 5 or more active tasks, don't overwhelm them with more AI tasks
         # unless they intentionally requested them (manual regeneration).
         if active_tasks_count >= 5:
-            print(f"Skipping task generation for {user.email}: already has {active_tasks_count} active tasks.")
             return []
 
         # 2. Get user profile
@@ -599,7 +593,6 @@ def trigger_ai_task_generation(user):
         
         return new_tasks
     except Exception as e:
-        print(f"Error in trigger_ai_task_generation: {str(e)}")
         return []
 
 @api_view(['POST'])
@@ -622,7 +615,6 @@ def generate_new_tasks_view(request):
         return Response({'status': 'success', 'data': serializer.data}, status=status.HTTP_201_CREATED)
 
     except Exception as e:
-        print(f"Error generating new tasks: {str(e)}")
         return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
@@ -702,7 +694,6 @@ def university_recommendations_view(request):
         }
         
         normalized_pref = country_mapping.get(preferred_country.lower(), preferred_country)
-        print(f"Preferred Country: {preferred_country} -> Normalized: {normalized_pref}")
 
         # 1. Exact/Fuzzy Match
         for country_data in all_countries_data:
@@ -713,18 +704,15 @@ def university_recommendations_view(request):
         
         # 2. Fallback if empty
         if not all_universities:
-            print(f"No universities found for preference '{preferred_country}'. Falling back to United States.")
             for country_data in all_countries_data:
                 if "united states" in country_data.get('country', '').lower():
                     all_universities.extend(country_data.get('universities', []))
             
             # If still empty, take everything
             if not all_universities:
-                 print("Still empty! taking all universities.")
                  for country_data in all_countries_data:
                      all_universities.extend(country_data.get('universities', []))
         
-        print(f"Found {len(all_universities)} universities for analysis.")
 
         # Pagination params
         page = int(request.query_params.get('page', 1))
@@ -732,7 +720,6 @@ def university_recommendations_view(request):
         
         total_pool_size = 25 # Check top 25 relevant ones (Reduced to prevent AI token overflow)
         top_60_unis = sorted(all_universities, key=lambda x: x.get('rank', 9999))[:total_pool_size]
-        print(f"Sending {len(top_60_unis)} universities to AI.")
 
         # Check Cache
         from .models import ProfileAICache, ShortlistedUniversity
@@ -741,17 +728,13 @@ def university_recommendations_view(request):
         if not cache_obj.recommendations:
             # Prepare Profile Data
             profile_data = ProfileSerializer(request.user).data
-            print("profile data", profile_data)
             # Call AI Service for THE ENTIRE TOP 60 to cache classifications
             ai_response = get_university_recommendations(profile_data, top_60_unis)
-            print("ai_response", ai_response)
             cache_obj.recommendations = ai_response
             cache_obj.save()
             is_cached = False
-            print("is_cached", is_cached)
         else:
             ai_response = cache_obj.recommendations
-            print("ai_response", ai_response)
             is_cached = True
 
         # Slicing for current page from the classified pool is TRICKY now because ai_response is dict of lists.

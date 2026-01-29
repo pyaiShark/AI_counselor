@@ -22,6 +22,23 @@ const UniversityCard = ({ university, onLock, isLocked, onEvaluate }) => {
         }
     };
 
+    const [imgSrc, setImgSrc] = useState(university.logo || "/default_university_logo.webp");
+    const [retryCount, setRetryCount] = useState(0);
+
+    const handleImageError = () => {
+        if (retryCount < 3) {
+            // Retry strategy: wait 1s, then force reload with cache buster
+            setRetryCount(prev => prev + 1);
+            setTimeout(() => {
+                const separator = university.logo.includes('?') ? '&' : '?';
+                setImgSrc(`${university.logo}${separator}retry=${Date.now()}`);
+            }, 1000);
+        } else {
+            // Fallback after 3 failures
+            setImgSrc("/default_university_logo.webp");
+        }
+    };
+
     return (
         <Card className={`relative flex flex-col h-full overflow-hidden transition-all duration-300 ${isLocked ? 'border-purple-500 shadow-purple-500/20 shadow-lg scale-[1.02]' : 'border-transparent hover:border-blue-500/30 hover:shadow-lg'}`}>
             {/* Lock Status Badge */}
@@ -32,10 +49,10 @@ const UniversityCard = ({ university, onLock, isLocked, onEvaluate }) => {
             <div className="relative h-48 w-full bg-gray-50 dark:bg-gray-800/50 flex items-center justify-center p-6 group">
                 <div className="absolute inset-0 bg-gradient-to-t from-gray-900/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
                 <img
-                    src={university.logo || "/placeholder.svg"}
+                    src={imgSrc}
                     alt={university.name}
                     className="max-h-full max-w-full object-contain transition-transform duration-500 group-hover:scale-105"
-                    onError={(e) => { e.target.onerror = null; e.target.src = "/placeholder.svg"; }}
+                    onError={handleImageError}
                 />
             </div>
 

@@ -1,5 +1,6 @@
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { useNavigate, Link } from 'react-router-dom';
 import { Title, Text } from '../components/tailus-ui/typography';
 import UniversityCard from '../components/UniversityCard';
 import { getUniversityRecommendations, evaluateUniversity, shortlistAction } from '../api';
@@ -7,6 +8,7 @@ import Loader from '../components/Loader';
 import { Lock } from 'lucide-react';
 
 const UniversityShortlisting = () => {
+    const navigate = useNavigate();
     // displayedRecommendations: What the user sees on the screen
     const [displayedRecommendations, setDisplayedRecommendations] = useState({ Dream: [], Target: [], Safe: [] });
     // buffer: Items fetched from server but not yet displayed
@@ -136,6 +138,13 @@ const UniversityShortlisting = () => {
 
     const handleLock = async (university, category) => {
         const isLocked = lockedUniversities.includes(university.name);
+
+        // Add Warning for Unlocking
+        if (isLocked) {
+            const warning = `⚠️ UNLOCK WARNING\n\nAre you sure you want to unlock ${university.name}?\n\nThis will remove it from your shortlisted universities.`;
+            if (!window.confirm(warning)) return;
+        }
+
         const action = isLocked ? 'unlock' : 'lock';
 
         try {
@@ -185,6 +194,27 @@ const UniversityShortlisting = () => {
         </div>
     );
 
+    // Full Page Loader for Initial Fetch (when no data is displayed)
+    if (loading && displayedRecommendations.Dream.length === 0 && displayedRecommendations.Target.length === 0 && displayedRecommendations.Safe.length === 0) {
+        return (
+            <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-white/80 dark:bg-gray-950/90 backdrop-blur-md transition-all">
+                <div className="relative">
+                    <div className="w-24 h-24 border-4 border-indigo-200 dark:border-indigo-900 rounded-full animate-pulse"></div>
+                    <div className="absolute inset-0 w-24 h-24 border-4 border-t-indigo-600 rounded-full animate-spin"></div>
+                    <div className="absolute inset-0 flex items-center justify-center text-3xl animate-bounce">🎓</div>
+                </div>
+                <div className="mt-8 text-center space-y-2">
+                    <Title className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-indigo-600 to-purple-600 animate-pulse">
+                        Analyzing Your Profile
+                    </Title>
+                    <Text className="text-gray-500 dark:text-gray-400">
+                        Our AI is curating the best university matches for you...
+                    </Text>
+                </div>
+            </div>
+        );
+    }
+
     return (
         <div className="min-h-screen bg-gray-50 dark:bg-gray-950 p-4 md:p-12 pt-24 md:pt-28 space-y-8 pb-32 transition-colors duration-500">
             <div className="max-w-7xl mx-auto space-y-12">
@@ -215,7 +245,7 @@ const UniversityShortlisting = () => {
                                 </div>
                             </div>
                             <Text size="xs" className="text-gray-500 uppercase tracking-widest font-bold">Max 10</Text>
-                            <a href="/shortlist" className="text-xs text-blue-600 hover:underline">View Locked</a>
+                            <Link to="/shortlist" className="text-xs text-blue-600 hover:underline">View Locked</Link>
                         </div>
                     </div>
                 </div>
@@ -299,7 +329,7 @@ const UniversityShortlisting = () => {
 
                     <div className={`pointer-events-auto transition-all duration-500 transform ${lockedUniversities.length > 0 ? 'translate-y-0 scale-100 opacity-100' : 'translate-y-20 scale-95 opacity-0'}`}>
                         <div className="p-1 rounded-full bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 shadow-[0_20px_50px_rgba(0,0,0,0.3)] dark:shadow-[0_20px_50px_rgba(255,255,255,0.1)]">
-                            <button className="bg-gray-900 dark:bg-white text-white dark:text-gray-900 px-10 py-4 rounded-full font-black text-xl flex items-center gap-4 hover:gap-6 hover:pr-8 group transition-all">
+                            <button onClick={() => navigate('/shortlist')} className="bg-gray-900 dark:bg-white text-white dark:text-gray-900 px-10 py-4 rounded-full font-black text-xl flex items-center gap-4 hover:gap-6 hover:pr-8 group transition-all">
                                 <span>Proceed to Applications</span>
                                 <svg className="w-6 h-6 transform transition-transform group-hover:translate-x-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M14 5l7 7m0 0l-7 7m7-7H3" />

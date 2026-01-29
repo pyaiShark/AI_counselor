@@ -114,36 +114,37 @@ export const getOnboardingStatus = async () => {
 };
 
 export const submitAcademicBackground = async (data) => {
+    uniRecommendationsCache = null; // Clear cache on update
     const response = await api.post('/onboarding/academic/', data);
     return response.data;
 };
-
 export const getAcademicBackground = async () => {
     const response = await api.get('/onboarding/academic/');
     return response.data;
 };
 
 export const submitStudyGoal = async (data) => {
+    uniRecommendationsCache = null; // Clear cache on update
     const response = await api.post('/onboarding/study-goal/', data);
     return response.data;
 };
-
 export const getStudyGoal = async () => {
     const response = await api.get('/onboarding/study-goal/');
     return response.data;
 };
 
 export const submitBudget = async (data) => {
+    uniRecommendationsCache = null; // Clear cache on update
     const response = await api.post('/onboarding/budget/', data);
     return response.data;
 };
-
 export const getBudget = async () => {
     const response = await api.get('/onboarding/budget/');
     return response.data;
 };
 
 export const submitExamsReadiness = async (data) => {
+    uniRecommendationsCache = null; // Clear cache on update
     const response = await api.post('/onboarding/exams/', data);
     return response.data;
 };

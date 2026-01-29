@@ -19,11 +19,26 @@ const StudyGoal = ({ formData, updateFormData, onNext, onBack, onSkip, loading, 
     ];
 
     const countries = [
-        "USA",
-        "UK",
+        "United States",
+        "United Kingdom",
         "Canada",
         "Australia",
         "Germany",
+        "France",
+        "Netherlands",
+        "China",
+        "Japan",
+        "South Korea",
+        "New Zealand",
+        "Switzerland",
+        "Sweden",
+        "Spain",
+        "Italy",
+        "Ireland",
+        "Singapore",
+        "Malaysia",
+        "Austria",
+        "Denmark",
         "Other"
     ];
 
