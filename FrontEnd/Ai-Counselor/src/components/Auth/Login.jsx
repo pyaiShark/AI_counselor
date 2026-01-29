@@ -93,10 +93,8 @@ export default function Login() {
             <Card className="w-full max-w-sm p-1 shadow-xl shadow-gray-950/5 dark:shadow-gray-950/20 bg-white/40 dark:bg-gray-900/40 backdrop-blur-xl border-white/60 dark:border-gray-800" variant="mixed">
                 <div data-rounded="large" className="p-8 sm:p-10">
                     <div className="text-center">
-                        <div className="inline-block p-3 bg-blue-100 rounded-full mb-4 animate-float">
-                            <svg className="w-8 h-8 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
-                            </svg>
+                        <div className="inline-block mb-4 animate-float">
+                            <img src="/logo.png" alt="AI Counselor Logo" className="w-16 h-16 rounded-xl shadow-lg border-2 border-white/20" />
                         </div>
                         <Title size="xl" className="mb-2 text-blue-600 dark:text-blue-400 animate-pulse-gentle">
                             Welcome Back

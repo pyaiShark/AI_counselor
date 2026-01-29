@@ -3,7 +3,7 @@ version: '3.8'
 services:
   web:
     build: .
-    command: gunicorn todo_app.wsgi:application --bind 0.0.0.0:8000
+    command: gunicorn Ai_counselor.wsgi:application --bind 0.0.0.0:8000
     volumes:
       - .:/app
     ports:

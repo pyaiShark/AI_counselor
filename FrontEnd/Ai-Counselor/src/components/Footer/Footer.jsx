@@ -11,11 +11,11 @@ const Footer = () => {
                 <div className="flex flex-col items-center justify-between gap-6 sm:flex-row">
                     <div className="flex flex-col items-center gap-4 sm:items-start">
                         <div className="flex items-center gap-2">
-                            <div className="relative h-8 w-8">
+                            <div className="relative h-10 w-10">
                                 <img
-                                    src="/image.png"
+                                    src="/logo.png"
                                     alt="AI Counselor Logo"
-                                    className="object-contain w-full h-full"
+                                    className="object-contain w-full h-full rounded-lg"
                                 />
                             </div>
                             <span className="text-lg font-bold text-gray-900 dark:text-white">

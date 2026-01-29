@@ -15,6 +15,9 @@ import Dashboard from './pages/Dashboard'
 import AICounselor from './pages/AICounselor'
 import Profile from './pages/Profile'
 import UniversityShortlisting from './pages/UniversityShortlisting'
+import LockedUniversities from './pages/LockedUniversities'
+import AllUniversities from './pages/AllUniversities'
+import ErrorPage from './components/Common/ErrorPage'
 
 import PublicRoute from './components/Routes/PublicRoute'
 
@@ -37,6 +40,10 @@ const router = createBrowserRouter(
         <Route path="profile" element={<Profile />} />
         <Route path="ai-counselor" element={<AICounselor />} />
         <Route path="university-shortlist" element={<UniversityShortlisting />} />
+        <Route path="shortlist" element={<LockedUniversities />} />
+        <Route path="universities/explore" element={<AllUniversities />} />
+        {/* Catch-all 404 Route */}
+        <Route path="*" element={<ErrorPage code={404} title="Page Not Found" message="The page you are looking for has been moved or doesn't exist." />} />
       </Route>
     </Route>
   )

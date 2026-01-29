@@ -123,7 +123,7 @@ const Dashboard = () => {
                         </div>
 
                         {/* Bottom Row: Widgets */}
-                        <div className="grid md:grid-cols-2 gap-6">
+                        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
                             {/* AI Counselor - Unlocked */}
                             <Link to="/ai-counselor" className="group block h-full">
                                 <Card className="h-full p-8 space-y-5 border border-transparent hover:border-blue-500/30 bg-white dark:bg-gray-900 shadow-lg hover:shadow-2xl hover:shadow-blue-500/10 transition-all duration-300 relative overflow-hidden">
@@ -152,11 +152,43 @@ const Dashboard = () => {
                                         <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" /></svg>
                                     </div>
                                     <div>
-                                        <Title size="lg" className="font-semibold">University Shortlist</Title>
-                                        <Text className="mt-2 text-gray-600 dark:text-gray-400">Curate and manage your dream list of universities.</Text>
+                                        <Title size="lg" className="font-semibold">Shortlist</Title>
+                                        <Text className="mt-2 text-gray-600 dark:text-gray-400">Manage your dream list.</Text>
                                     </div>
                                     <div className="inline-block px-3 py-1 bg-purple-100 dark:bg-purple-900/20 text-purple-600 dark:text-purple-400 text-xs font-bold rounded-full uppercase tracking-wider">
                                         Active
+                                    </div>
+                                </Card>
+                            </Link>
+
+                            {/* Locked Universities - Unlocked */}
+                            <Link to="/shortlist" className="block h-full">
+                                <Card className="h-full p-8 space-y-5 bg-white dark:bg-gray-900 border border-transparent hover:border-green-500/30 shadow-lg hover:shadow-2xl transition-all duration-300 cursor-pointer">
+                                    <div className="w-12 h-12 rounded-xl bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400 flex items-center justify-center">
+                                        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                                    </div>
+                                    <div>
+                                        <Title size="lg" className="font-semibold">Locked List</Title>
+                                        <Text className="mt-2 text-gray-600 dark:text-gray-400">Your committed picks.</Text>
+                                    </div>
+                                    <div className="inline-block px-3 py-1 bg-green-100 dark:bg-green-900/20 text-green-600 dark:text-green-400 text-xs font-bold rounded-full uppercase tracking-wider">
+                                        Ready
+                                    </div>
+                                </Card>
+                            </Link>
+
+                            {/* Explore All - Unlocked */}
+                            <Link to="/universities/explore" className="block h-full">
+                                <Card className="h-full p-8 space-y-5 bg-white dark:bg-gray-900 border border-transparent hover:border-indigo-500/30 shadow-lg hover:shadow-2xl transition-all duration-300 cursor-pointer">
+                                    <div className="w-12 h-12 rounded-xl bg-indigo-100 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 flex items-center justify-center">
+                                        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
+                                    </div>
+                                    <div>
+                                        <Title size="lg" className="font-semibold">Explore All</Title>
+                                        <Text className="mt-2 text-gray-600 dark:text-gray-400">Browse global database.</Text>
+                                    </div>
+                                    <div className="inline-block px-3 py-1 bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 text-xs font-bold rounded-full uppercase tracking-wider">
+                                        Browse
                                     </div>
                                 </Card>
                             </Link>

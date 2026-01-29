@@ -1,7 +1,7 @@
 import axios from 'axios';
 import { getAccessToken, getRefreshToken, setToken, removeToken } from './Auth';
 
-const API_BASE_URL = 'http://127.0.0.1:8000/api';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://127.0.0.1:8000/api';
 
 const api = axios.create({
     baseURL: API_BASE_URL,
@@ -59,6 +59,14 @@ api.interceptors.response.use(
                      window.location.href = '/login';
                 }
             }
+        }
+
+        // Handle 500 Internal Server Errors
+        if (error.response?.status >= 500) {
+            // Redirect to a specific error page if needed, or let components handle it
+            // For a "global" error page redirect:
+            // window.location.href = '/server-error'; 
+            console.error("Server Error:", error.response.data);
         }
         return Promise.reject(error);
     }
@@ -170,6 +178,12 @@ export const getUniversityRecommendations = (page = 1, limit = 12) => {
     }
     return api.get(`/universities/recommendations/?page=${page}&limit=${limit}`);
 };
+
+export const getAllUniversities = (page = 1, limit = 12, country = '', minRank = 0, maxRank = 10000, search = '') => {
+    return api.get(`/universities/all/?page=${page}&limit=${limit}&country=${encodeURIComponent(country)}&rank_min=${minRank}&rank_max=${maxRank}&search=${encodeURIComponent(search)}`);
+};
+
+export const getLockedUniversities = () => api.get('/universities/locked/');
 
 export const evaluateUniversity = (uniName) => api.get(`/universities/evaluate/?name=${encodeURIComponent(uniName)}`);
 export const shortlistAction = (data) => {

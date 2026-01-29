@@ -25,7 +25,7 @@ urlpatterns = [
     path('onboarding/study-goal/', views.study_goal_view, name='study_goal'),
     path('onboarding/budget/', views.budget_view, name='budget'),
     path('onboarding/exams/', views.exams_readiness_view, name='exams_readiness'),
-    path('onboarding/status/', views.get_onboading_status, name='get_onboading_status'),
+    path('onboarding/status/', views.get_onboarding_status, name='get_onboarding_status'),
     
     # Dashboard / Task Routes
     path('tasks/', views.tasks_view, name='tasks'),
@@ -38,4 +38,6 @@ urlpatterns = [
     path('universities/recommendations/', views.university_recommendations_view, name='university_recommendations'),
     path('universities/evaluate/', views.university_evaluation_view, name='university_evaluation'),
     path('universities/shortlist/', views.shortlist_action_view, name='shortlist_action'),
+    path('universities/locked/', views.locked_universities_view, name='locked_universities'),
+    path('universities/all/', views.all_universities_view, name='all_universities'),
 ]

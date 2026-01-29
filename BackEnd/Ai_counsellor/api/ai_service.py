@@ -144,24 +144,28 @@ def generate_tasks_for_user(profile_data, current_stage, existing_tasks=None):
 def get_university_recommendations(profile_data, universities_list):
     """
     Classifies a list of universities into Dream, Target, and Safe based on the user's profile.
+    Returns detailed insights for each university.
     """
     try:
         # safely get nested data
         academic = profile_data.get('academic_background') or {}
         exams = profile_data.get('exams_readiness') or {}
         study_goal = profile_data.get('study_goal') or {}
+        budget = profile_data.get('budget', {})
 
         # Simplify university list found in prompt to save tokens (just sends names+ranks)
         simple_uni_list = [{"name": u.get('name'), "rank": u.get('rank', 999)} for u in universities_list]
         
         prompt = f"""
         Act as an University Admissions Expert. Classify the universities below into 'Dream', 'Target', and 'Safe' categories based on the student's profile.
+        For each university, provided a detailed analysis.
 
         Student Profile:
         - GPA/Grades: {academic.get('gpa', 'N/A')}
         - Education: {academic.get('education_level', 'N/A')} in {academic.get('degree_major', 'N/A')}
         - Test Scores: IELTS/TOEFL: {exams.get('ielts_toefl_score', 'N/A')}, GRE/GMAT: {exams.get('gre_gmat_score', 'N/A')}
         - Target Degree: {study_goal.get('intended_degree', 'N/A')} in {study_goal.get('field_of_study', 'N/A')}
+        - Budget: {budget.get('budget_range', 'N/A')} ({budget.get('funding_plan', 'N/A')})
 
         Universities to Classify (Rank provided):
         {json.dumps(simple_uni_list)}
@@ -171,12 +175,38 @@ def get_university_recommendations(profile_data, universities_list):
         - Target: Good fit, profile matches average requirements.
         - Safe: High probability of acceptance.
         - Split reasonably evenly if possible, but prioritize realistic fit.
+        - Provide 'cost' as 'Low', 'Medium', or 'High' relative to the country context.
+        - Provide 'acceptance_chance' as 'Low', 'Medium', or 'High'.
         
         Return ONLY valid JSON in this format:
         {{
-            "Dream": ["University Name 1", "University Name 2"],
-            "Target": ["University Name 3"],
-            "Safe": ["University Name 4"]
+            "Dream": [
+                {{
+                    "name": "University Name", 
+                    "reason": "Why it fits...", 
+                    "risks": "Key risks...", 
+                    "cost": "High/Medium/Low", 
+                    "acceptance_chance": "Low/Medium/High"
+                }}
+            ],
+            "Target": [
+                {{
+                    "name": "University Name", 
+                    "reason": "Why it fits...", 
+                    "risks": "Key risks...", 
+                    "cost": "High/Medium/Low", 
+                    "acceptance_chance": "Low/Medium/High"
+                }}
+            ],
+            "Safe": [
+                {{
+                    "name": "University Name", 
+                    "reason": "Why it fits...", 
+                    "risks": "Key risks...", 
+                    "cost": "High/Medium/Low", 
+                    "acceptance_chance": "Low/Medium/High"
+                }}
+            ]
         }}
         """
 
@@ -191,10 +221,10 @@ def get_university_recommendations(profile_data, universities_list):
         )
 
         text = completion.choices[0].message.content
+        print("Raw AI Response:", text)
         return json.loads(text)
 
     except Exception as e:
         print(f"AI Service Error (Recommendations): {str(e)}")
-        # Fallback to empty if AI fails, effectively returning no recommendations or handled by caller
+        # Fallback to empty structure
         return {"Dream": [], "Target": [], "Safe": []}
-

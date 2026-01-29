@@ -1,0 +1,45 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div
+    class="min-h-screen flex items-center justify-center px-4 py-12 bg-gray-100 dark:bg-gray-900 transition-colors duration-300">
+    <div
+        class="max-w-lg w-full bg-white/40 dark:bg-gray-900/40 backdrop-blur-xl border border-white/60 dark:border-gray-800 rounded-3xl p-8 sm:p-12 text-center shadow-2xl">
+        <div class="relative inline-block mb-8">
+            <div class="absolute inset-0 bg-blue-500/20 blur-3xl rounded-full"></div>
+            <div
+                class="relative font-black tracking-tighter text-9xl text-blue-600/10 dark:text-blue-400/10 select-none">
+                {{ status_code|default:"500" }}
+            </div>
+            <div class="absolute inset-0 flex items-center justify-center">
+                <img src="/logo.png" alt="AI Counselor Logo" class="w-24 h-24 rounded-2xl shadow-xl">
+            </div>
+        </div>
+
+        <h1 class="text-3xl font-bold text-gray-900 dark:text-white mb-4">
+            {{ title|default:"Server Error" }}
+        </h1>
+
+        <p class="text-gray-500 dark:text-gray-400 text-lg mb-10">
+            {{ message|default:"An unexpected error occurred on our server. Our AI counselors are looking into it!" }}
+        </p>
+
+        <div class="flex flex-col sm:flex-row gap-4 justify-center">
+            <a href="/"
+                class="inline-flex items-center justify-center px-8 h-12 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl transition-all shadow-lg hover:shadow-blue-500/25">
+                Back to Home
+            </a>
+            <button onclick="window.location.reload()"
+                class="inline-flex items-center justify-center px-8 h-12 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-900 dark:text-white font-semibold rounded-xl border border-gray-200 dark:border-gray-700 transition-all">
+                Retry
+            </button>
+        </div>
+
+        <div class="mt-12 pt-8 border-t border-gray-100 dark:border-gray-800">
+            <p class="text-sm text-gray-400 italic">
+                Error Ref: {{ request.id|default:"SERVER-MAIN" }} | AI Counselor Backend
+            </p>
+        </div>
+    </div>
+</div>
+{% endblock %}

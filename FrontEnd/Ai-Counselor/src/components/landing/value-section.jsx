@@ -3,7 +3,7 @@ import { Text, Title } from "@tailus-ui/typography"
 
 const values = [
     {
-        title: 'Guided, stage-based counselling',
+        title: 'Guided, stage-based counseling',
         description: 'Not a chatbot. A structured decision system with clear phases.',
         icon: (
             <svg
@@ -45,7 +45,7 @@ export function ValueSection() {
             <div className="mx-auto max-w-4xl space-y-12">
                 <div className="text-center">
                     <Title className="text-3xl font-bold sm:text-4xl">
-                        What makes AI Counsellor different
+                        What makes AI Counselor different
                     </Title>
                 </div>
 

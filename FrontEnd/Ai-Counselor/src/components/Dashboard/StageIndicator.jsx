@@ -19,18 +19,8 @@ const StageIndicator = ({ currentStage = 1 }) => {
             try {
                 const response = await getOnboardingStatus();
                 if (response.status === 'success') {
-                    const { onboarding_step } = response.data;
-
-                    // Logic: If Onboarding is 'Completed' -> Move to Stage 2 (Discovering Universities)
-                    if (onboarding_step === 'Completed') {
-                        if (currentStage < 2) {
-                            setActiveStage(2);
-                        } else {
-                            setActiveStage(currentStage);
-                        }
-                    } else {
-                        setActiveStage(currentStage);
-                    }
+                    const { application_stage } = response.data;
+                    setActiveStage(application_stage || activeStage);
                 }
             } catch (error) {
                 console.error("Error fetching onboarding status:", error);

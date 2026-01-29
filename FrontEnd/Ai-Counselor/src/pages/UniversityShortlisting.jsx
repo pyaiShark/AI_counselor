@@ -214,7 +214,8 @@ const UniversityShortlisting = () => {
                                     </span>
                                 </div>
                             </div>
-                            <Text size="xs" className="text-gray-500 uppercase tracking-widest font-bold">Goal: At least 1</Text>
+                            <Text size="xs" className="text-gray-500 uppercase tracking-widest font-bold">Max 10</Text>
+                            <a href="/shortlist" className="text-xs text-blue-600 hover:underline">View Locked</a>
                         </div>
                     </div>
                 </div>

@@ -50,7 +50,38 @@ const UniversityCard = ({ university, onLock, isLocked, onEvaluate }) => {
                     </div>
                 </div>
 
-                {evaluationData ? (
+                {(university.why_it_fits || university.reason) ? (
+                    <div className="mt-2 space-y-3 bg-gray-50 dark:bg-gray-800/50 p-3 rounded-xl border border-gray-100 dark:border-gray-700 text-sm animate-fade-in-up">
+                        <div className="space-y-1">
+                            <Caption className="font-semibold text-gray-900 dark:text-white">Why it fits:</Caption>
+                            <p className="text-gray-600 dark:text-gray-400 text-xs leading-relaxed">
+                                {university.reason || (Array.isArray(university.why_it_fits) ? university.why_it_fits[0] : university.why_it_fits)}
+                            </p>
+                        </div>
+
+                        {(university.risks || university.key_risks) && (
+                            <div className="space-y-1 pt-1 border-t border-gray-200 dark:border-gray-700">
+                                <Caption className="font-semibold text-red-600 dark:text-red-400 text-[10px] uppercase">Key Risks</Caption>
+                                <p className="text-gray-600 dark:text-gray-400 text-xs leading-relaxed">
+                                    {university.risks || (Array.isArray(university.key_risks) ? university.key_risks[0] : university.key_risks)}
+                                </p>
+                            </div>
+                        )}
+
+                        <div className="grid grid-cols-2 gap-2 pt-2 border-t border-gray-200 dark:border-gray-700">
+                            <div className="flex flex-col">
+                                <span className="text-[10px] uppercase tracking-wider text-gray-400 font-bold">Cost</span>
+                                <span className="font-medium text-gray-800 dark:text-gray-200">{university.cost || university.cost_level || 'N/A'}</span>
+                            </div>
+                            <div className="flex flex-col">
+                                <span className="text-[10px] uppercase tracking-wider text-gray-400 font-bold">Chance</span>
+                                <span className={`font-bold px-2 py-0.5 rounded text-xs w-fit ${university.acceptance_chance === 'High' ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' : university.acceptance_chance === 'Low' ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400' : 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400'}`}>
+                                    {university.acceptance_chance || 'N/A'}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                ) : evaluationData ? (
                     <div className="mt-2 space-y-3 bg-gray-50 dark:bg-gray-800/50 p-3 rounded-xl border border-gray-100 dark:border-gray-700 text-sm animate-fade-in-up">
                         <div className="flex justify-between items-center border-b border-gray-200 dark:border-gray-700 pb-2">
                             <span className="font-semibold text-gray-700 dark:text-gray-200">Fit Score</span>
@@ -59,19 +90,10 @@ const UniversityCard = ({ university, onLock, isLocked, onEvaluate }) => {
                         <div className="space-y-1">
                             <Caption className="font-semibold text-gray-900 dark:text-white">Match Reasons:</Caption>
                             <ul className="list-disc pl-4 text-gray-600 dark:text-gray-400 text-xs space-y-1">
-                                {evaluationData.why_it_fits.slice(0, 2).map((r, i) => <li key={i}>{r}</li>)}
+                                {evaluationData.why_it_fits?.slice(0, 2).map((r, i) => <li key={i}>{r}</li>)}
                             </ul>
                         </div>
-                        <div className="grid grid-cols-2 gap-2 pt-1">
-                            <div className="flex flex-col">
-                                <span className="text-[10px] uppercase tracking-wider text-gray-400 font-bold">Cost</span>
-                                <span className="font-medium text-gray-800 dark:text-gray-200">{evaluationData.cost_level}</span>
-                            </div>
-                            <div className="flex flex-col">
-                                <span className="text-[10px] uppercase tracking-wider text-gray-400 font-bold">Chance</span>
-                                <span className="font-medium text-gray-800 dark:text-gray-200">{evaluationData.acceptance_chance}</span>
-                            </div>
-                        </div>
+                        {/* Fallback for manually triggered evaluation */}
                     </div>
                 ) : (
                     <div className="mt-auto pt-2">

@@ -49,14 +49,14 @@ function Header() {
                     <div className="flex items-center justify-between">
 
                         <Link to={isLoggedIn ? "/dashboard" : "/"} className="flex items-center gap-2 transition-opacity hover:opacity-90">
-                            <div className="relative h-8 w-8 sm:h-10 sm:w-10">
+                            <div className="relative h-10 w-10 sm:h-12 sm:w-12">
                                 <img
-                                    src="/image.png"
-                                    alt="AI Counsellor Logo"
-                                    className="object-contain w-full h-full"
+                                    src="/logo.png"
+                                    alt="AI Counselor Logo"
+                                    className="object-contain w-full h-full rounded-lg"
                                 />
                             </div>
-                            <span className="text-lg sm:text-xl font-bold text-foreground">AI Counsellor</span>
+                            <span className="text-lg sm:text-xl font-bold text-foreground tracking-tight">AI Counselor</span>
                         </Link>
 
                         {/* Desktop Navigation */}

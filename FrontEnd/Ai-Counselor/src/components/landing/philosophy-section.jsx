@@ -7,7 +7,7 @@ export function PhilosophySection() {
                         A decision and execution system
                     </h2>
                     <p className="text-base leading-relaxed text-muted-foreground">
-                        AI Counsellor is not a browsing tool or a chat interface. It's a
+                        AI Counselor is not a browsing tool or a chat interface. It's a
                         structured decision-making system designed to guide you through the
                         complex process of choosing where to study abroad. We combine your
                         unique profile, preferences, and constraints with intelligent

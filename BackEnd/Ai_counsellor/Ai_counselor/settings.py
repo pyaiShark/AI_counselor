@@ -15,6 +15,7 @@ import os
 from dotenv import load_dotenv
 from decouple import config
 from datetime import timedelta
+from urllib.parse import urlparse, parse_qsl
 
 
 load_dotenv()
@@ -31,7 +32,7 @@ SECRET_KEY = os.environ.get("SECRET_KEY", None)
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.environ.get("DEBUG", False)
 
-ALLOWED_HOSTS = ['*']
+ALLOWED_HOSTS = ['ai-counselor-ywkj.onrender.com', 'localhost', '127.0.0.1']
 
 
 # Application definition
@@ -111,12 +112,29 @@ WSGI_APPLICATION = 'Ai_counselor.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+if os.getenv("DATABASE_URL"):
+    Postgres = urlparse(os.getenv("DATABASE_URL"))
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.postgresql',
+            'NAME': Postgres.path.replace('/', ''),
+            'USER': Postgres.username,
+            'PASSWORD': Postgres.password,
+            'HOST': Postgres.hostname,
+            'PORT': Postgres.port or 5432,
+            'OPTIONS': {
+                **dict(parse_qsl(Postgres.query)),
+                'sslmode': 'require',
+            },
+        }
     }
-}
+else:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
+        }
+    }
 
 
 # Password validation
@@ -163,10 +181,8 @@ STATIC_URL = 'static/'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # Allow your frontend origin
-CORS_ALLOWED_ORIGINS = [
-    "http://127.0.0.1:5173",
-    "https://127.0.0.1:5173"
-]
+CORS_ALLOWED_ORIGINS = config('CORS_ALLOWED_ORIGINS', default='http://localhost:5173,https://localhost:5173').split(',')
+CSRF_TRUSTED_ORIGINS = [origin for origin in CORS_ALLOWED_ORIGINS]
 
 ACCOUNT_LOGIN_METHODS = ('email',)  # Only allow login via email
 
@@ -190,7 +206,7 @@ ACCOUNT_UNIQUE_EMAIL = True  # Ensure email uniqueness
 ACCOUNT_SIGNUP_FIELDS = ['email*', 'first_name*', 'last_name*', 'password1*', 'password2*']
 ACCOUNT_EMAIL_VERIFICATION = 'optional'  # Set to 'mandatory' if preferred
 LOGIN_REDIRECT_URL = '/api/auth/google/callback/'  # Redirect to backend callback to handle JWT
-LOGOUT_REDIRECT_URL = 'http://127.0.0.1:5173'  # Redirect after logout
+LOGOUT_REDIRECT_URL = config('FRONTEND_URL', default='http://127.0.0.1:5173')
 
 # Social account providers
 SOCIALACCOUNT_PROVIDERS = {
