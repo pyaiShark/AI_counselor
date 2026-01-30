@@ -13,14 +13,3 @@ services:
     environment:
       - IS_DOCKER=True
       - DEBUG=True
-    depends_on:
-      - sub_db
-
-  sub_db:
-    image: postgres
-    environment:
-      - POSTGRES_DB=${DB_NAME}
-      - POSTGRES_USER=${DB_USER}
-      - POSTGRES_PASSWORD=${DB_PASSWORD}
-    ports:
-      - "5435:5432"
