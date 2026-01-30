@@ -20,14 +20,18 @@ class CustomEmailBackend(EmailBackend):
         if self.connection:
             return False
 
-        connection_params = {'timeout': self.timeout} if self.timeout else {}
+        connection_params = {}
+        if self.timeout is not None:
+            connection_params['timeout'] = self.timeout
         
         try:
             if self.use_ssl:
                 # Use SSL connection (port 465)
                 self.connection = SMTP_SSL4(
                     self.host, 
-                    self.port, 
+                    self.port,
+                    keyfile=self.ssl_keyfile,
+                    certfile=self.ssl_certfile,
                     **connection_params
                 )
             else:
@@ -38,7 +42,10 @@ class CustomEmailBackend(EmailBackend):
                     **connection_params
                 )
                 if self.use_tls:
-                    self.connection.starttls()
+                    self.connection.starttls(
+                        keyfile=self.ssl_keyfile,
+                        certfile=self.ssl_certfile
+                    )
             
             if self.username and self.password:
                 self.connection.login(self.username, self.password)
