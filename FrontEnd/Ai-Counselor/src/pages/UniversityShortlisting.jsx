@@ -44,7 +44,7 @@ const UniversityShortlisting = () => {
                 setPage(pageNum);
             }
         } catch (err) {
-            console.error("Failed to fetch recommendations", err);
+            // console.error("Failed to fetch recommendations", err);
             setError("Unable to generate recommendations.");
         } finally {
             setLoading(false);
@@ -167,7 +167,7 @@ const UniversityShortlisting = () => {
             }
 
         } catch (err) {
-            console.error("Lock action error", err);
+            // console.error("Lock action error", err);
             const msg = err.response?.data?.message || "Failed to update shortlist.";
             setLockMessage(msg);
             setTimeout(() => setLockMessage(null), 5000);

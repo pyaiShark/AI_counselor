@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Title, Text } from '../components/tailus-ui/typography';
-import { getLockedUniversities, shortlistAction } from '../api';
+import { getLockedUniversities, shortlistAction, recordVisit } from '../api';
 import { MapPin, Calendar, ArrowLeft, Unlock, ExternalLink } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
@@ -66,6 +66,7 @@ const LockedUniversities = () => {
             }
         };
         fetchLocked();
+        recordVisit('shortlist');
     }, []);
 
     if (loading) return (

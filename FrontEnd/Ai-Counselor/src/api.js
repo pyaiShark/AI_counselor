@@ -1,7 +1,8 @@
 import axios from 'axios';
 import { getAccessToken, getRefreshToken, setToken, removeToken } from './Auth';
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://127.0.0.1:8000/api';
+const API_HOST = import.meta.env.VITE_API_BASE_URL || 'http://127.0.0.1:8000';
+const API_BASE_URL = `${API_HOST}/api`;
 
 const api = axios.create({
     baseURL: API_BASE_URL,
@@ -66,7 +67,7 @@ api.interceptors.response.use(
             // Redirect to a specific error page if needed, or let components handle it
             // For a "global" error page redirect:
             // window.location.href = '/server-error'; 
-            console.error("Server Error:", error.response.data);
+            // console.error("Server Error:", error.response.data);
         }
         return Promise.reject(error);
     }
@@ -112,6 +113,12 @@ export const getOnboardingStatus = async () => {
     const response = await api.get('/onboarding/status/');
     return response.data;
 };
+
+export const recordVisit = async (section) => {
+    const response = await api.post('/onboarding/record-visit/', { section });
+    return response.data;
+};
+
 
 export const submitAcademicBackground = async (data) => {
     uniRecommendationsCache = null; // Clear cache on update
@@ -191,6 +198,61 @@ export const shortlistAction = (data) => {
     // Clear cache if user changes their shortlist to ensure recommendations stay fresh
     uniRecommendationsCache = null;
     return api.post('/universities/shortlist/', data);
+};
+
+// --- AI Chat ---
+export const sendChatMessage = async (message, sessionId = null) => {
+    try {
+        const response = await api.post('chat/', { message, session_id: sessionId });
+        return response.data;
+    } catch (error) {
+        throw error.response ? error.response.data : error;
+    }
+};
+
+export const getChatHistory = async (sessionId) => {
+    try {
+        const response = await api.get(`chat/history/?session_id=${sessionId}`);
+        return response.data;
+    } catch (error) {
+        throw error.response ? error.response.data : error;
+    }
+};
+
+export const getChatSessions = async () => {
+    try {
+        const response = await api.get('chat/sessions/');
+        return response.data;
+    } catch (error) {
+        throw error.response ? error.response.data : error;
+    }
+};
+
+export const createChatSession = async () => {
+    try {
+        const response = await api.post('chat/sessions/', {}); // Empty body
+        return response.data;
+    } catch (error) {
+        throw error.response ? error.response.data : error;
+    }
+};
+
+export const updateChatSession = async (sessionId, title) => {
+    try {
+        const response = await api.patch(`chat/sessions/${sessionId}/`, { title });
+        return response.data;
+    } catch (error) {
+        throw error.response ? error.response.data : error;
+    }
+};
+
+export const deleteChatSession = async (sessionId) => {
+    try {
+        const response = await api.delete(`chat/sessions/${sessionId}/`);
+        return response.data;
+    } catch (error) {
+        throw error.response ? error.response.data : error;
+    }
 };
 
 export default api;

@@ -38,6 +38,9 @@ class User(AbstractBaseUser, PermissionsMixin):
         choices=ONBOARDING_STEP_CHOICES, 
         default='AcademicBackground'
     )
+    has_visited_shortlist = models.BooleanField(default=False)
+    has_visited_explore = models.BooleanField(default=False)
+
 
     USERNAME_FIELD = 'email'  # Set email as the unique identifier
     REQUIRED_FIELDS = ['first_name', 'last_name']  # Specify other required fields
@@ -146,3 +149,29 @@ class ProfileAICache(models.Model):
 
     def __str__(self):
         return f"AI Cache for {self.user.email}"
+
+class ChatSession(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    user = models.ForeignKey(User, related_name="chat_sessions", on_delete=models.CASCADE)
+    title = models.CharField(max_length=255, default="New Chat")
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"{self.user.email} - {self.title}"
+
+class ChatMessage(models.Model):
+    SENDER_CHOICES = [
+        ('user', 'User'),
+        ('ai', 'AI'),
+    ]
+
+    user = models.ForeignKey(User, related_name="chat_messages", on_delete=models.CASCADE)
+    session = models.ForeignKey(ChatSession, related_name="messages", on_delete=models.CASCADE, null=True, blank=True) # made nullable for migration
+    sender = models.CharField(max_length=10, choices=SENDER_CHOICES)
+    message = models.TextField()
+    suggested_actions = models.JSONField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.user.email} - {self.sender}: {self.message[:20]}"

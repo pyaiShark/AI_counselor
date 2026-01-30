@@ -64,12 +64,6 @@ class TaskSerializer(serializers.ModelSerializer):
         model = Task
         fields = ['id', 'title', 'is_completed', 'task_type']
         read_only_fields = ['id', 'task_type']
-        
-class TaskSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Task
-        fields = ['id', 'title', 'is_completed', 'task_type']
-        read_only_fields = ['id', 'task_type']
 
 class ProfileSerializer(serializers.ModelSerializer):
     academic_background = AcademicBackgroundSerializer(read_only=True)

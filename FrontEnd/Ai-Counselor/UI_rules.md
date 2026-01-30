@@ -16,24 +16,29 @@ This document outlines the mandatory rules for any agent working on this project
   - Do NOT modify `src/main.jsx` or the routing configuration unless explicitly instructed to add a new route.
 
 ## 3. UI Components & Styling
-- **tailus-ui**: Always prioritize using the components located in `src/components/tailus-ui` (e.g., `Button`, `Card`, `Input`, `Drawer`).
+- **tailus-ui Imports**: Always use the `@tailus-ui` alias for imports (e.g., `import { Button } from "@tailus-ui/button"`) to avoid casing-related issues on different operating systems.
+- **Component Priority**: Always prioritize using the components located in `src/components/tailus-ui`.
 - **Consistency**:
-  - Follow the existing design patterns found in `src/components/Header/Header.jsx` and `src/components/landing`.
+  - Follow existing design patterns in `src/components/Header/Header.jsx` and `src/components/landing`.
   - Use `flex`, `grid`, and standard Tailwind spacing/color utilities.
-  - Respect the dark/light mode toggle provided by `tailus-ui`.
+  - **Dark/Light Mode**: Respect the dark/light mode toggle. Always verify that new UI elements are legible and visually appealing in **both** themes.
 
-## 4. "Do Not Change" Zones
+## 4. Specific Design Patterns
+- **Mobile First**: All dashboard components and complex views must be fully responsive. Use vertical layouts for cards or indicators (like `StageIndicator`) on mobile screens.
+- **Currency**: Use **USD ($)** as the standard currency symbol for all financial displays (Budget, Tuition, etc.).
+- **Dynamic Inputs**: For AI chat or counselor inputs, implement auto-growing textareas that expand as the user types.
+- **Application Flow**: Maintain the `StageIndicator` logic to reflect the user's progress through the application milestones.
+
+## 5. "Do Not Change" Zones
 Unless explicitly requested by the user, **DO NOT EDIT**:
 - `src/components/tailus-ui/*` (Base UI library files)
 - `src/lib/*` (Utils and configurations)
 - `eslint.config.js`, `vite.config.js`, `postcss.config.js` (Build configs)
 
-## 5. New Features
-- When adding new pages, create them in `src/pages/` and import them into the router.
-- When creating new components, place them in `src/components/` (create a subfolder if complex).
-
-## 6. Design Philosophy
-- **Neat & Clean**: The UI must remain **Neat and Clean**. Maintain a clutter-free interface with proper spacing and a professional aesthetic.
+## 6. Project Organization
+- **Pages**: Create new pages in `src/pages/` and register them in the router.
+- **Components**: Place new components in `src/components/` (use subfolders for complex features).
+- **Neat & Clean**: Maintain a professionally spaced, clutter-free interface. Avoid "cheap" or generic looking colors.
 
 ## Summary
-**Keep it Simple**: Follow the current UI. Do not reinvent the wheel. Use the existing components and layout.
+**Keep it Simple**: Follow the current UI. Do not reinvent the wheel. Use the existing components and layout. Ensure mobile responsiveness and dual-theme compatibility for every change.

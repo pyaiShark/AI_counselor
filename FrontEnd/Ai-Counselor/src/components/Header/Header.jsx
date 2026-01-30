@@ -2,15 +2,17 @@ import { Link, useNavigate, useLocation } from 'react-router-dom';
 import Button from '../tailus-ui/Button';
 import { useEffect, useState, useContext } from 'react';
 import ThemeToggleButton from '../ThemeTogle/ThemeToggleButton';
-import { Menu, User, LogOut } from 'lucide-react';
+import { Menu, User, LayoutDashboard, MessageSquare, Search, Lock } from 'lucide-react';
 import Drawer from '../tailus-ui/Drawer';
 import { twMerge } from 'tailwind-merge';
 import AuthContext from '../../context/AuthContext';
+import { getProfile } from '../../api';
 
 function Header() {
     const [mounted, setMounted] = useState(false);
     const [scrolled, setScrolled] = useState(false);
     const [drawerOpen, setDrawerOpen] = useState(false);
+    const [isOnboardingComplete, setIsOnboardingComplete] = useState(false);
 
     // Use AuthContext instead of local state
     const { isLoggedIn, logout } = useContext(AuthContext);
@@ -22,20 +24,42 @@ function Header() {
 
     useEffect(() => {
         setMounted(true);
+
+        const fetchOnboardingStatus = async () => {
+            if (isLoggedIn) {
+                try {
+                    const profile = await getProfile();
+                    setIsOnboardingComplete(profile.onboarding_step === 'Completed');
+                } catch (err) {
+                    console.error("Failed to fetch profile in Header", err);
+                }
+            } else {
+                setIsOnboardingComplete(false);
+            }
+        };
+
+        fetchOnboardingStatus();
+
         const handleScroll = () => {
-            // Optimized scroll handler: only update if value changes
             const isScrolled = window.scrollY > 20;
             setScrolled(prev => prev !== isScrolled ? isScrolled : prev);
         };
 
         window.addEventListener('scroll', handleScroll);
         return () => window.removeEventListener('scroll', handleScroll);
-    }, []);
+    }, [isLoggedIn, location.pathname]); // Update status on navigation or login change
 
     const handleLogout = () => {
         logout();
         navigate('/');
     };
+
+    const navLinks = [
+        { name: 'Dashboard', path: '/dashboard', icon: LayoutDashboard },
+        { name: 'AI Counselor', path: '/ai-counselor', icon: MessageSquare },
+        { name: 'Explore', path: '/universities/explore', icon: Search },
+        { name: 'Shortlist', path: '/shortlist', icon: Lock },
+    ];
 
     return (
         <>
@@ -48,7 +72,7 @@ function Header() {
                 <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
                     <div className="flex items-center justify-between">
 
-                        <Link to={isLoggedIn ? "/dashboard" : "/"} className="flex items-center gap-2 transition-opacity hover:opacity-90">
+                        <Link to={isLoggedIn ? "/dashboard" : "/"} className="flex items-center gap-2 transition-opacity hover:opacity-90 shrink-0">
                             <div className="relative h-10 w-10 sm:h-12 sm:w-12">
                                 <img
                                     src="/logo.png"
@@ -56,8 +80,37 @@ function Header() {
                                     className="object-contain w-full h-full rounded-lg"
                                 />
                             </div>
-                            <span className="text-lg sm:text-xl font-bold text-foreground tracking-tight">AI Counselor</span>
+                            <span className="hidden sm:inline text-lg sm:text-xl font-bold text-foreground tracking-tight">AI Counselor</span>
                         </Link>
+
+                        {/* Desktop Navigation Links */}
+                        {isLoggedIn && isOnboardingComplete && (
+                            <nav className="hidden lg:flex items-center gap-1 mx-4">
+                                {navLinks.map((link) => {
+                                    const Icon = link.icon;
+                                    const isActive = location.pathname === link.path;
+                                    return (
+                                        <Link key={link.path} to={link.path}>
+                                            <Button.Root
+                                                variant="ghost"
+                                                size="sm"
+                                                className={twMerge(
+                                                    "flex items-center gap-2 px-3 py-2 rounded-lg transition-colors",
+                                                    isActive
+                                                        ? "bg-blue-50 text-blue-600 dark:bg-blue-900/20 dark:text-blue-400"
+                                                        : "text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-800"
+                                                )}
+                                            >
+                                                <Button.Icon>
+                                                    <Icon className="w-4 h-4" />
+                                                </Button.Icon>
+                                                <Button.Label className="font-medium">{link.name}</Button.Label>
+                                            </Button.Root>
+                                        </Link>
+                                    );
+                                })}
+                            </nav>
+                        )}
 
                         {/* Desktop Navigation */}
                         <div className="hidden md:flex items-center gap-4">
@@ -66,7 +119,10 @@ function Header() {
                             {isLoggedIn ? (
                                 <>
                                     <Link to="/profile">
-                                        <Button.Root variant="ghost" className="flex items-center gap-2">
+                                        <Button.Root variant="ghost" size="sm" className={twMerge(
+                                            "flex items-center gap-2",
+                                            location.pathname === '/profile' && "bg-gray-100 dark:bg-gray-800"
+                                        )}>
                                             <Button.Icon>
                                                 <User className="w-4 h-4" />
                                             </Button.Icon>
@@ -123,26 +179,66 @@ function Header() {
                     <div className="border-t border-gray-200 dark:border-gray-800 my-4" />
                     {isLoggedIn ? (
                         <>
-                            <Link to="/profile" onClick={() => setDrawerOpen(false)}>
-                                <Button.Root className="w-full justify-center" variant="ghost">
-                                    <Button.Label>Profile</Button.Label>
+                            {isOnboardingComplete && (
+                                <div className="space-y-1 mb-4">
+                                    <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider px-3">Navigation</span>
+                                    {navLinks.map((link) => {
+                                        const Icon = link.icon;
+                                        const isActive = location.pathname === link.path;
+                                        return (
+                                            <Link key={link.path} to={link.path} onClick={() => setDrawerOpen(false)}>
+                                                <Button.Root
+                                                    variant="ghost"
+                                                    className={twMerge(
+                                                        "w-full justify-start gap-3 px-3",
+                                                        isActive ? "bg-blue-50 text-blue-600 dark:bg-blue-900/20 dark:text-blue-400" : "text-gray-600 dark:text-gray-400"
+                                                    )}
+                                                >
+                                                    <Button.Icon>
+                                                        <Icon className="w-5 h-5" />
+                                                    </Button.Icon>
+                                                    <Button.Label>{link.name}</Button.Label>
+                                                </Button.Root>
+                                            </Link>
+                                        );
+                                    })}
+                                </div>
+                            )}
+
+                            <div className="space-y-1">
+                                <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider px-3">Account</span>
+                                <Link to="/profile" onClick={() => setDrawerOpen(false)}>
+                                    <Button.Root className={twMerge(
+                                        "w-full justify-start gap-3 px-3",
+                                        location.pathname === '/profile' ? "bg-gray-100 dark:bg-gray-800" : ""
+                                    )} variant="ghost">
+                                        <Button.Icon>
+                                            <User className="w-5 h-5" />
+                                        </Button.Icon>
+                                        <Button.Label>Profile</Button.Label>
+                                    </Button.Root>
+                                </Link>
+                                {!isOnboardingComplete && (
+                                    <Link to="/dashboard" onClick={() => setDrawerOpen(false)}>
+                                        <Button.Root className="w-full justify-start gap-3 px-3" variant="ghost">
+                                            <Button.Icon>
+                                                <LayoutDashboard className="w-5 h-5" />
+                                            </Button.Icon>
+                                            <Button.Label>Go to Dashboard</Button.Label>
+                                        </Button.Root>
+                                    </Link>
+                                )}
+                                <Button.Root
+                                    variant="outline"
+                                    className="w-full justify-center text-red-500 border-red-500 mt-4"
+                                    onClick={() => {
+                                        handleLogout();
+                                        setDrawerOpen(false);
+                                    }}
+                                >
+                                    <Button.Label>Sign Out</Button.Label>
                                 </Button.Root>
-                            </Link>
-                            <Link to="/dashboard" onClick={() => setDrawerOpen(false)}>
-                                <Button.Root className="w-full justify-center">
-                                    <Button.Label>Go to Dashboard</Button.Label>
-                                </Button.Root>
-                            </Link>
-                            <Button.Root
-                                variant="outline"
-                                className="w-full justify-center text-red-500 border-red-500"
-                                onClick={() => {
-                                    handleLogout();
-                                    setDrawerOpen(false);
-                                }}
-                            >
-                                <Button.Label>Sign Out</Button.Label>
-                            </Button.Root>
+                            </div>
                         </>
                     ) : (
                         !isAuthPage && (

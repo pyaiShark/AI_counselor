@@ -38,14 +38,14 @@ const router = createBrowserRouter(
         <Route path="onboarding" element={<Onboarding />} />
         <Route path="dashboard" element={<Dashboard />} />
         <Route path="profile" element={<Profile />} />
-        <Route path="ai-counselor" element={<AICounselor />} />
         <Route path="university-shortlist" element={<UniversityShortlisting />} />
         <Route path="shortlist" element={<LockedUniversities />} />
         <Route path="universities/explore" element={<AllUniversities />} />
-        {/* Catch-all 404 Route */}
         <Route path="*" element={<ErrorPage code={404} title="Page Not Found" message="The page you are looking for has been moved or doesn't exist." />} />
       </Route>
+      <Route path="ai-counselor" element={<AICounselor />} />
     </Route>
+
   )
 )
 

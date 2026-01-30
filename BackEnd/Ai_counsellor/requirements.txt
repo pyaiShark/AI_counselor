@@ -10,3 +10,5 @@ django-allauth
 openai
 langgraph
 langchain
+cryptography
+google-generativeai

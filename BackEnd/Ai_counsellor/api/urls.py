@@ -26,6 +26,8 @@ urlpatterns = [
     path('onboarding/budget/', views.budget_view, name='budget'),
     path('onboarding/exams/', views.exams_readiness_view, name='exams_readiness'),
     path('onboarding/status/', views.get_onboarding_status, name='get_onboarding_status'),
+    path('onboarding/record-visit/', views.record_visit_view, name='record_visit'),
+
     
     # Dashboard / Task Routes
     path('tasks/', views.tasks_view, name='tasks'),
@@ -40,4 +42,10 @@ urlpatterns = [
     path('universities/shortlist/', views.shortlist_action_view, name='shortlist_action'),
     path('universities/locked/', views.locked_universities_view, name='locked_universities'),
     path('universities/all/', views.all_universities_view, name='all_universities'),
+    
+    # AI Chat
+    path('chat/sessions/', views.chat_sessions_view, name='chat_sessions'),
+    path('chat/sessions/<uuid:session_id>/', views.chat_session_detail_view, name='chat_session_detail'),
+    path('chat/', views.chat_view, name='chat'),
+    path('chat/history/', views.chat_history_view, name='chat_history'),
 ]

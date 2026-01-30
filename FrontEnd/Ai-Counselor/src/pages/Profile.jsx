@@ -127,7 +127,7 @@ const Profile = () => {
             setProfileData(fullProfile);
             setFormData(mappedOnboardingData);
         } catch (err) {
-            console.error(err);
+            // console.error(err);
             setError('Failed to load profile.');
         } finally {
             setLoading(false);
@@ -182,7 +182,7 @@ const Profile = () => {
             await fetchProfile();
             setEditingSection(null);
         } catch (err) {
-            console.error(err);
+            // console.error(err);
             setError('Failed to update profile.');
             setLoading(false); // Only set loading false on error, success handled by fetchProfile
         }

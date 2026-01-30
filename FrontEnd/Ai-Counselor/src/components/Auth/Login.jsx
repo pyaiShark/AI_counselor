@@ -1,4 +1,5 @@
 import React, { useState, useContext, useEffect } from 'react';
+import { Eye, EyeOff } from 'lucide-react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import Card from '@tailus-ui/Card';
 import Button from '@tailus-ui/Button';
@@ -17,6 +18,7 @@ import { setToken } from '../../Auth';
 export default function Login() {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
+    const [showPassword, setShowPassword] = useState(false);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
 
@@ -55,7 +57,7 @@ export default function Login() {
             }
         } catch (err) {
             setError('Google login failed to synchronize. Please try again.');
-            console.error(err);
+            // console.error(err);
         } finally {
             setLoading(false);
             // Clear tokens from URL
@@ -111,7 +113,7 @@ export default function Login() {
                             intent="gray"
                             size="sm"
                             className="flex w-full items-center justify-center"
-                            onClick={() => window.location.href = 'http://127.0.0.1:8000/accounts/google/login/'}
+                            onClick={() => window.location.href = `${import.meta.env.VITE_API_BASE_URL}/accounts/google/login/`}
                         >
                             <Button.Icon type="leading" size="xs">
                                 <Google />
@@ -156,16 +158,31 @@ export default function Login() {
                                             Forgot password?
                                         </UiLink>
                                     </div>
-                                    <Input
-                                        id="password"
-                                        name="password"
-                                        type="password"
-                                        required
-                                        variant="outlined"
-                                        size="md"
-                                        value={password}
-                                        onChange={(e) => setPassword(e.target.value)}
-                                    />
+                                    <div className="relative">
+                                        <Input
+                                            id="password"
+                                            name="password"
+                                            type={showPassword ? "text" : "password"}
+                                            required
+                                            variant="outlined"
+                                            size="md"
+                                            value={password}
+                                            onChange={(e) => setPassword(e.target.value)}
+                                            className="pr-10"
+                                        />
+                                        <button
+                                            type="button"
+                                            onClick={() => setShowPassword(!showPassword)}
+                                            className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-blue-600 dark:text-gray-400 dark:hover:text-blue-400 transition-colors p-1"
+                                            aria-label={showPassword ? "Hide password" : "Show password"}
+                                        >
+                                            {showPassword ? (
+                                                <EyeOff size={20} />
+                                            ) : (
+                                                <Eye size={20} />
+                                            )}
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
                         </div>

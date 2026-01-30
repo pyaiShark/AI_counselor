@@ -41,6 +41,40 @@ def run_tests():
         print(f"Login failed: {response.text}")
         return
 
+    # 1.5 Populate Profile Data (Onboarding)
+    print("\nPopulating Profile Data...")
+    
+    # Academic
+    requests.post(f"{BASE_URL}/onboarding/academic/", headers=headers, json={
+        "education_level": "Bachelor's",
+        "degree_major": "Computer Science",
+        "graduation_year": 2024,
+        "gpa": "3.8"
+    })
+    
+    # Study Goal
+    requests.post(f"{BASE_URL}/onboarding/study-goal/", headers=headers, json={
+        "intended_degree": "Master's",
+        "field_of_study": "AI & Robotics",
+        "target_intake": "Fall 2025",
+        "preferred_countries": "United States"
+    })
+    
+    # Budget
+    requests.post(f"{BASE_URL}/onboarding/budget/", headers=headers, json={
+        "budget_range": "30k-50k",
+        "funding_plan": "Self-funded"
+    })
+    
+    # Exams
+    requests.post(f"{BASE_URL}/onboarding/exams/", headers=headers, json={
+        "ielts_toefl_status": "Completed",
+        "ielts_toefl_score": "8.0",
+        "gre_gmat_status": "Completed",
+        "sop_status": "Draft"
+    })
+    print("Profile Populated.")
+
     # 2. Test Recommendations
     print("\nTesting Recommendations Endpoint...")
     rec_url = f"{BASE_URL}/universities/recommendations/"
@@ -53,12 +87,18 @@ def run_tests():
         print(f"Safe Count: {len(data['Safe'])}")
         
         # Pick a university to test locking
+        uni_to_lock = None
         if data['Dream']:
             uni_to_lock = data['Dream'][0]
-        else:
-            print("No dream universities found, cannot test locking.")
-            return
-
+        elif data['Target']:
+            uni_to_lock = data['Target'][0]
+        elif data['Safe']:
+            uni_to_lock = data['Safe'][0]
+            
+        if not uni_to_lock:
+             print("No universities found in any category.")
+             return
+            
     else:
         print(f"Recommendations failed: {resp.text}")
         return
@@ -68,7 +108,7 @@ def run_tests():
     eval_url = f"{BASE_URL}/universities/evaluate/?name={uni_to_lock['name']}"
     resp = requests.get(eval_url, headers=headers)
     if resp.status_code == 200:
-        print("Evaluation Success:", resp.json()['data']['fit_score'])
+        print("Evaluation Success:", resp.json().get('data', {}))
     else:
         print(f"Evaluation failed: {resp.text}")
 

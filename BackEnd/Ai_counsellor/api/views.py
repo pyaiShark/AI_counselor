@@ -34,8 +34,8 @@ from .serializers import (
     ExamsAndReadinessSerializer,
     TaskSerializer
 )
-from .models import User, AcademicBackground, StudyGoal, Budget, ExamsAndReadiness, Task, ShortlistedUniversity
-from .ai_service import evaluate_profile_strength, generate_tasks_for_user, get_university_recommendations
+from .models import User, AcademicBackground, StudyGoal, Budget, ExamsAndReadiness, Task, ShortlistedUniversity, ChatSession, ChatMessage, ProfileAICache
+from .ai_service import evaluate_profile_strength, generate_tasks_for_user, get_university_recommendations, chat_with_counselor
 
 
 @api_view(['GET', 'PUT'])
@@ -50,7 +50,6 @@ def profile_view(request):
         if serializer.is_valid():
             serializer.save()
             # Invalidate AI Cache
-            from .models import ProfileAICache
             ProfileAICache.objects.filter(user=request.user).update(recommendations=None, strength_data=None)
             
             # Optionally trigger tasks
@@ -406,7 +405,6 @@ def exams_readiness_view(request):
             request.user.save()
             
             # Invalidate AI Cache
-            from .models import ProfileAICache
             ProfileAICache.objects.filter(user=request.user).update(recommendations=None, strength_data=None)
 
             # Use same logic: triggers because status IS now 'Completed'
@@ -424,22 +422,47 @@ def get_current_stage_data(user):
     Helper to determine the granular application stage.
     Used by both status view and task generation.
     """
-    from .models import ShortlistedUniversity
     
     onboarding_step = user.onboarding_step
     application_stage = 1 # Building Profile
     
     if onboarding_step == 'Completed':
-        application_stage = 2 # Discovering Universities
+        application_stage = 2 # Discovering Universities (Base stage after onboarding)
         
-        # If user has locked any university, they are in Stage 3
+        # If user has visited explore or shortlist, move to Stage 3 (Finalizing Universities)
+        if user.has_visited_explore or user.has_visited_shortlist:
+            application_stage = 3
+            
+        # If user has locked any university, they are in Stage 4 (Preparing Applications)
         if ShortlistedUniversity.objects.filter(user=user, is_locked=True).exists():
-            application_stage = 3 # Finalizing Universities
+            application_stage = 4
             
     return {
         'onboarding_step': onboarding_step,
         'application_stage': application_stage
     }
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def record_visit_view(request):
+    """
+    Endpoint to record visits to specific sections for stage progression.
+    """
+    section = request.data.get('section') # 'explore', 'shortlist'
+    
+    if section == 'explore':
+        request.user.has_visited_explore = True
+    elif section == 'shortlist':
+        request.user.has_visited_shortlist = True
+    else:
+        return Response({'error': 'Invalid section'}, status=status.HTTP_400_BAD_REQUEST)
+        
+    request.user.save()
+    
+    # Check if this changed the stage and trigger tasks if so
+    trigger_ai_task_generation(request.user)
+    
+    return Response({'status': 'success', 'stage_data': get_current_stage_data(request.user)})
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
@@ -518,7 +541,6 @@ def task_detail_view(request, task_id):
 @permission_classes([IsAuthenticated])
 def profile_strength_view(request):
     try:
-        from .models import ProfileAICache
         cache_obj, created = ProfileAICache.objects.get_or_create(user=request.user)
         
         if cache_obj.strength_data:
@@ -571,7 +593,6 @@ def trigger_ai_task_generation(user):
         
         # 5. Call AI service - restricted to 3-5 items to stay within 7 total limit
         # Get locked universities for context
-        from .models import ShortlistedUniversity
         locked_unis = ShortlistedUniversity.objects.filter(user=user, is_locked=True).values_list('university_name', flat=True)
         locked_context = list(locked_unis) if locked_unis else None
         
@@ -722,7 +743,6 @@ def university_recommendations_view(request):
         top_60_unis = sorted(all_universities, key=lambda x: x.get('rank', 9999))[:total_pool_size]
 
         # Check Cache
-        from .models import ProfileAICache, ShortlistedUniversity
         cache_obj, created = ProfileAICache.objects.get_or_create(user=request.user)
         
         if not cache_obj.recommendations:
@@ -798,6 +818,229 @@ def university_evaluation_view(request):
     try:
         # Mock Evaluation Data
         # In real app, this would query a detailed DB or external API
+        return Response({'status': 'success', 'data': {}})
+    except Exception as e:
+        return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+@api_view(['GET', 'POST'])
+@permission_classes([IsAuthenticated])
+def chat_sessions_view(request):
+    try:
+        if request.method == 'POST':
+            session = ChatSession.objects.create(user=request.user)
+            
+            # Create Initial Personalized Greeting
+            stage_data = get_current_stage_data(request.user)
+            stage_num = stage_data.get('application_stage', 1)
+            stage_names = {
+                1: "Building Profile",
+                2: "Discovering Universities",
+                3: "Finalizing Universities",
+                4: "Preparing Applications"
+            }
+            stage_name = stage_names.get(stage_num, "Building Profile")
+            
+            user_name = request.user.first_name or "there"
+            greeting = f"Hi {user_name}! I'm your AI Counselor. Currently, you are at the '{stage_name}' stage of your study abroad journey. I'm here to help you every step of the way. Ready to be a better version of yourself?"
+            
+            ChatMessage.objects.create(
+                user=request.user,
+                session=session,
+                sender='ai',
+                message=greeting,
+                suggested_actions=["Analyze my profile", "Recommend universities", "How strong is my application?"]
+            )
+
+            return Response({
+                'status': 'success', 
+                'data': {'id': session.id, 'title': session.title, 'created_at': session.created_at}
+            }, status=status.HTTP_201_CREATED)
+            
+        else: # GET
+            sessions = ChatSession.objects.filter(user=request.user).order_by('-updated_at')
+            data = [{'id': s.id, 'title': s.title, 'created_at': s.created_at} for s in sessions]
+            return Response({'status': 'success', 'data': data}, status=status.HTTP_200_OK)
+
+    except Exception as e:
+        return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+@api_view(['PATCH', 'DELETE'])
+@permission_classes([IsAuthenticated])
+def chat_session_detail_view(request, session_id):
+    try:
+        try:
+            session = ChatSession.objects.get(id=session_id, user=request.user)
+        except ChatSession.DoesNotExist:
+            return Response({'error': 'Session not found'}, status=status.HTTP_404_NOT_FOUND)
+
+        if request.method == 'PATCH':
+            new_title = request.data.get('title')
+            if not new_title:
+                return Response({'error': 'Title is required'}, status=status.HTTP_400_BAD_REQUEST)
+            session.title = new_title
+            session.save()
+            return Response({
+                'status': 'success',
+                'data': {'id': session.id, 'title': session.title}
+            })
+
+        elif request.method == 'DELETE':
+            session.delete()
+            return Response({'status': 'success', 'message': 'Session deleted'})
+
+    except Exception as e:
+        return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def chat_view(request):
+    try:
+        user_message = request.data.get('message')
+        session_id = request.data.get('session_id')
+        
+        if not user_message:
+            return Response({'error': 'Message is required'}, status=status.HTTP_400_BAD_REQUEST)
+            
+        
+        # Get or Create Session
+        session = None
+        if session_id:
+            try:
+                session = ChatSession.objects.get(id=session_id, user=request.user)
+            except ChatSession.DoesNotExist:
+                return Response({'error': 'Invalid Session ID'}, status=status.HTTP_404_NOT_FOUND)
+        else:
+             session = ChatSession.objects.create(user=request.user)
+             # Add greeting for sessions created directly via chat endpoint
+             stage_data = get_current_stage_data(request.user)
+             stage_num = stage_data.get('application_stage', 1)
+             stage_names = {1: "Building Profile", 2: "Discovering Universities", 3: "Finalizing Universities", 4: "Preparing Applications"}
+             stage_name = stage_names.get(stage_num, "Building Profile")
+             user_name = request.user.first_name or "there"
+             greeting = f"Hi {user_name}! I'm your AI Counselor. Currently, you are at the '{stage_name}' stage of your study abroad journey. I'm here to help you every step of the way. Ready to be a better version of yourself?"
+             
+             ChatMessage.objects.create(
+                 user=request.user,
+                 session=session,
+                 sender='ai',
+                 message=greeting,
+                 suggested_actions=["Analyze my profile", "Recommend universities"]
+             )
+
+        # 1. Update Session Title if it's the first USER message and title is default
+        user_msg_count = session.messages.filter(sender='user').count()
+        if user_msg_count == 0 and session.title == "New Chat":
+             new_title = (user_message[:30] + '..') if len(user_message) > 30 else user_message
+             session.title = new_title
+             session.save()
+        
+        # 2. Save User Message
+        new_msg = ChatMessage.objects.create(
+            user=request.user,
+            session=session,
+            sender='user',
+            message=user_message
+        )
+        
+        # 3. Get Context (History, Profile, Stage, Universities)
+        # Exclude the newly created message to avoid "User, User" turn error in AI
+        history_objs = ChatMessage.objects.filter(session=session).exclude(id=new_msg.id).order_by('-created_at')[:10]
+        history = [{"role": msg.sender if msg.sender == 'user' else 'assistant', "content": msg.message} for msg in reversed(history_objs)]
+        
+        profile_data = ProfileSerializer(request.user).data
+        
+        # New Context: Stage and Universities
+        stage_data = get_current_stage_data(request.user)
+        
+        shortlisted_unis = ShortlistedUniversity.objects.filter(user=request.user)
+        locked_unis = [
+            {"name": u.university_name, "country": u.country, "category": u.category} 
+            for u in shortlisted_unis if u.is_locked
+        ]
+        other_shortlisted = [
+            {"name": u.university_name, "country": u.country, "category": u.category} 
+            for u in shortlisted_unis if not u.is_locked
+        ]
+        
+        # Get active tasks
+        active_tasks_qs = Task.objects.filter(user=request.user, is_completed=False)
+        tasks = [{"id": t.id, "title": t.title} for t in active_tasks_qs]
+
+        # 4. Call AI
+        ai_result = chat_with_counselor(
+            profile_data, 
+            history, 
+            user_message,
+            stage=stage_data.get('application_stage'),
+            locked_unis=locked_unis,
+            shortlisted_unis=other_shortlisted,
+            tasks=tasks
+        )
+        
+        # Handle Task Actions
+        task_action = ai_result.get('task_action')
+        if task_action:
+            if task_action.get('type') == 'create_task':
+                title = task_action.get('title')
+                # Enforce limit of 7
+                if active_tasks_qs.count() < 7:
+                    Task.objects.create(user=request.user, title=title, task_type='PERSONAL')
+            elif task_action.get('type') == 'complete_task':
+                task_id = task_action.get('task_id')
+                Task.objects.filter(id=task_id, user=request.user).update(is_completed=True)
+
+        # 5. Save AI Response
+        ChatMessage.objects.create(
+            user=request.user,
+            session=session,
+            sender='ai',
+            message=ai_result['response'],
+            suggested_actions=ai_result['suggested_actions']
+        )
+        
+        # Update session timestamp
+        session.save() 
+        
+        return Response({
+            'status': 'success',
+            'data': {
+                'response': ai_result['response'],
+                'suggested_actions': ai_result['suggested_actions'],
+                'session_id': session.id,
+                'session_title': session.title
+            }
+        }, status=status.HTTP_200_OK)
+
+    except Exception as e:
+        return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def chat_history_view(request):
+    try:
+        session_id = request.query_params.get('session_id')
+        if not session_id:
+             return Response({'error': 'Session ID is required'}, status=status.HTTP_400_BAD_REQUEST)
+             
+        # Verify ownership
+        if not ChatSession.objects.filter(id=session_id, user=request.user).exists():
+            return Response({'error': 'Session not found'}, status=status.HTTP_404_NOT_FOUND)
+
+        messages = ChatMessage.objects.filter(session_id=session_id).order_by('created_at')
+        
+        data = []
+        for msg in messages:
+            data.append({
+                'id': msg.id,
+                'sender': msg.sender,
+                'message': msg.message,
+                'suggested_actions': msg.suggested_actions or [],
+                'timestamp': msg.created_at
+            })
+            
+        return Response({'status': 'success', 'data': data}, status=status.HTTP_200_OK)
+    except Exception as e:
+        return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
         
         evaluation = {
             'university_name': uni_name,
@@ -861,7 +1104,7 @@ def shortlist_action_view(request):
             # LOCK ACTION: This changes the application stage from 2 to 3
             # We trigger task generation to provide Stage 3 guidance
             #trigger_ai_task_generation(request.user)
-            print(trigger_ai_task_generation(request.user))
+            # print(trigger_ai_task_generation(request.user))
             
             return Response({'status': 'success', 'message': f'Locked {uni_name}'})
 
@@ -958,7 +1201,6 @@ def all_universities_view(request):
         has_next = end_idx < len(filtered_universities)
 
         # Mark locked
-        from .models import ShortlistedUniversity
         locked_set = set(ShortlistedUniversity.objects.filter(user=request.user, is_locked=True).values_list('university_name', flat=True))
 
         for uni in current_batch:
@@ -986,11 +1228,11 @@ def google_login_callback(request):
     Callback view that allauth redirects to after successful Google login.
     Generates JWT tokens for the authenticated user and redirects to frontend.
     """
-    print(f"Callback reached. User: {request.user}")
-    print(f"Is authenticated: {request.user.is_authenticated}")
+    # print(f"Callback reached. User: {request.user}")
+    # print(f"Is authenticated: {request.user.is_authenticated}")
     
     if not request.user.is_authenticated:
-        print("User not authenticated in callback")
+        # print("User not authenticated in callback")
         return redirect('http://127.0.0.1:5173/login?error=Authentication failed')
 
     # Generate JWT tokens
@@ -998,7 +1240,7 @@ def google_login_callback(request):
     access_token = str(refresh.access_token)
     refresh_token = str(refresh)
     
-    print(f"Tokens generated for {request.user.email}")
+    # print(f"Tokens generated for {request.user.email}")
 
     # Redirect to frontend with tokens
     frontend_url = config('FRONTEND_URL', default='http://127.0.0.1:5173')

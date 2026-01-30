@@ -76,7 +76,7 @@ const Onboarding = () => {
                 // Let's assume on load we just set the step. Data fetching is for "Back".
 
             } catch (err) {
-                console.error("Failed to fetch onboarding status:", err);
+                // console.error("Failed to fetch onboarding status:", err);
                 setError('Failed to sync progress. Please refresh.');
             } finally {
                 setFetchingStatus(false);
@@ -146,7 +146,7 @@ const Onboarding = () => {
                 }
             }
         } catch (err) {
-            console.warn(`Failed to fetch data for step ${step}`, err);
+            // console.warn(`Failed to fetch data for step ${step}`, err);
             // Non-blocking error, user can just re-enter data
         } finally {
             setLoading(false);
@@ -185,7 +185,7 @@ const Onboarding = () => {
                 handleFinish();
             }
         } catch (err) {
-            console.error(err);
+            // console.error(err);
             setError(err.response?.data?.error || 'Failed to save progress. Please try again.');
         } finally {
             setLoading(false);
@@ -218,7 +218,7 @@ const Onboarding = () => {
             });
             navigate('/dashboard');
         } catch (err) {
-            console.error(err);
+            // console.error(err);
             setError(err.response?.data?.error || 'Failed to complete.');
         } finally {
             setLoading(false);

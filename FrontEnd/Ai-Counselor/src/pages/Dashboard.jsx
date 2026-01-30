@@ -58,7 +58,7 @@ const Dashboard = () => {
                 setStatus(profileData.onboarding_step === 'Completed' ? 'completed' : 'incomplete');
                 setCurrentStep(step);
             } catch (err) {
-                console.error("Dashboard fetch error", err);
+                // console.error("Dashboard fetch error", err);
             }
         };
 

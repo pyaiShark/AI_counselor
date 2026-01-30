@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Title, Text } from '../components/tailus-ui/typography';
-import { getAllUniversities, shortlistAction, evaluateUniversity } from '../api';
+import { getAllUniversities, shortlistAction, evaluateUniversity, recordVisit } from '../api';
 import UniversityCard from '../components/UniversityCard';
 import { Search, Filter, ArrowLeft, ArrowRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
@@ -41,6 +41,7 @@ const AllUniversities = () => {
     useEffect(() => {
         window.scrollTo(0, 0);
         fetchUniversities();
+        recordVisit('explore');
     }, [page, country, rankMin, rankMax, debouncedSearch]);
 
     const handleLock = async (university) => {
@@ -117,7 +118,6 @@ const AllUniversities = () => {
                             <option value="Netherlands">Netherlands</option>
                             <option value="China">China</option>
                             <option value="Japan">Japan</option>
-                            <option value="South Korea">South Korea</option>
                             <option value="New Zealand">New Zealand</option>
                             <option value="Switzerland">Switzerland</option>
                             <option value="Sweden">Sweden</option>

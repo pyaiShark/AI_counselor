@@ -16,7 +16,7 @@ export function UniversitiesShowcase() {
         if (loading) return;
         setLoading(true);
         try {
-            const response = await axios.get(`http://127.0.0.1:8000/api/university/top-20/?page=${pageNum}`);
+            const response = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/api/university/top-20/?page=${pageNum}`);
             const newData = response.data.data;
             const pagination = response.data.pagination;
 
