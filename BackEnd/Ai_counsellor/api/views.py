@@ -22,6 +22,8 @@ from django.conf import settings
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 import json
 import os
+import socket
+import smtplib
 
 
 from .serializers import (
@@ -189,9 +191,16 @@ def password_reset_request(request):
                     img.add_header('Content-ID', '<logo>')
                     msg.attach(img)
             
-            msg.send()
-
-            return Response({"detail": "Password reset email has been sent."}, status=status.HTTP_200_OK)
+            try:
+                msg.send()
+                return Response({"detail": "Password reset email has been sent."}, status=status.HTTP_200_OK)
+            except (socket.timeout, smtplib.SMTPException) as e:
+                # Log the error if you have logging set up
+                print(f"Email sending failed: {e}")
+                return Response(
+                    {"error": "Unable to send email at this time. Please try again later."},
+                    status=status.HTTP_503_SERVICE_UNAVAILABLE
+                )
         except UserModel.DoesNotExist:
             return Response({"error": "This email doesn't exist. Please try to sign up."}, status=status.HTTP_404_NOT_FOUND)
     

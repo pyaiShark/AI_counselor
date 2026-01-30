@@ -79,6 +79,7 @@ AUTHENTICATION_BACKENDS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -174,6 +175,22 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
 STATIC_URL = 'static/'
+STATIC_ROOT = BASE_DIR / 'staticfiles'
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+
+# Frontend Dist Path
+FRONTEND_DIR = BASE_DIR.parent.parent / 'FrontEnd' / 'Ai-Counselor' / 'dist'
+
+STATICFILES_DIRS = [
+    # Tell Django where to look for React's build files
+    FRONTEND_DIR,
+    FRONTEND_DIR / 'assets', 
+]
+
+# Explicitly set mimetypes for JS modules to avoid "application/octet-stream" error
+import mimetypes
+mimetypes.add_type("application/javascript", ".js", True)
+mimetypes.add_type("text/css", ".css", True)
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
@@ -194,6 +211,7 @@ EMAIL_USE_TLS = True
 EMAIL_HOST_USER = config('EMAIL_HOST_USER')
 EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD')
 DEFAULT_FROM_EMAIL = config('DEFAULT_FROM_EMAIL')
+EMAIL_TIMEOUT = 10  # Timeout in seconds to prevent worker hanging
 
 # Email-related settings for django-allauth
 #ACCOUNT_EMAIL_REQUIRED = True remove latter
