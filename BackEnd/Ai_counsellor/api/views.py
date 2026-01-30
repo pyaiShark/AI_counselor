@@ -194,7 +194,7 @@ def password_reset_request(request):
             try:
                 msg.send()
                 return Response({"detail": "Password reset email has been sent."}, status=status.HTTP_200_OK)
-            except (socket.timeout, smtplib.SMTPException) as e:
+            except (OSError, socket.timeout, smtplib.SMTPException) as e:
                 # Log the error if you have logging set up
                 print(f"Email sending failed: {e}")
                 return Response(
